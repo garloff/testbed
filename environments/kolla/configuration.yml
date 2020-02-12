@@ -58,9 +58,10 @@ enable_ocatvia: "no"
 enable_panko: "yes"
 enable_watcher: "no"
 
+enable_etcd: "yes"
 enable_grafana: "yes"
 enable_redis: "yes"
-enable_skydive: "no"
+enable_skydive: "yes"
 
 # disable services
 enable_chrony: "no"

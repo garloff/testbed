@@ -157,7 +157,9 @@ to use further services.
 ### Infrastructure
 
 * Ceph
+* Cockpit
 * Elasticsearch
+* Etcd
 * Fluentd
 * Gnocchi
 * Grafana
@@ -166,6 +168,7 @@ to use further services.
 * Kibana
 * Mariadb
 * Memcached
+* Netdata
 * Openvswitch
 * Rabbitmq
 * Redis
@@ -278,6 +281,34 @@ Docker etc. are already installed during stack creation. Therefore the creation 
 
 The manager is started after the deployment of the HCI nodes has been completed. This is necessary to
 be able to carry out various preparatory steps after the manager has been made available.
+
+After a change to the definition of a stack, the stack can be updated.
+
+```
+openstack --os-cloud testbed \
+  stack update \
+  -e environment.yml \
+  -t stack.yml testbed
++---------------------+--------------------------------------+
+| Field               | Value                                |
++---------------------+--------------------------------------+
+| id                  | 2317ea11-f5c8-454e-9595-a7f0e14eaae6 |
+| stack_name          | testbed                              |
+| description         | No description                       |
+| creation_time       | 2020-02-09T19:41:54Z                 |
+| updated_time        | 2020-02-11T21:34:45Z                 |
+| stack_status        | UPDATE_IN_PROGRESS                   |
+| stack_status_reason | Stack UPDATE started                 |
++---------------------+--------------------------------------+
+```
+
+If the stack is no longer needed it can be deleted.
+
+```
+openstack --os-cloud testbed \
+  stack delete testbed
+Are you sure you want to delete this stack(s) [y/N]? y
+```
 
 ### Customisation
 
@@ -500,7 +531,7 @@ This section describes how individual parts of the testbed can be deployed.
 * Infrastructure services (also deploy `Clustered infrastructure services`)
 
   ```
-  osism-kolla deploy openvswitch,memcached
+  osism-kolla deploy openvswitch,memcached,etcd,kibana
   ```
 
 * Basic OpenStack services (also deploy `Infrastructure services`, `Clustered infrastructure services`, and `Ceph`)
@@ -515,6 +546,33 @@ This section describes how individual parts of the testbed can be deployed.
   osism-kolla deploy heat,gnocchi,ceilometer,aodh,panko
   ```
 
+* Network analyzer (also deploy `Clustered infrastructure services`, `Infrastructure services`, and `Basic OpenStack services`)
+
+  ```
+  osism-kolla deploy skydive
+  ```
+
+  The Skydive agent creates a high load on the Open vSwitch services. Therefore the agent is only
+  started manually when needed.
+
+  ```
+  osism-generic manage-container -e container_action=stop -e container_name=skydive_agent -l skydive-agent
+  ```
+
+* Realtime monitoring
+
+  ```
+  osism-infrastructure netdata
+  ```
+
+  ![Netdata webinterface](https://raw.githubusercontent.com/osism/testbed/master/images/netdata.png)
+
+* Cockpit
+
+  ```
+  osism-generic cockpit
+  ```
+
 ## Webinterfaces
 
 | Name             | URL                        | Username | Password                                 |
@@ -522,8 +580,9 @@ This section describes how individual parts of the testbed can be deployed.
 | ARA              | http://192.168.40.5:8120   | ara      | S6JE2yJUwvraiX57                         |
 | Horizon          | http://192.168.50.200      | admin    | TTgPSOSmgdmQAJUKu627DuzutgnIoAzsSxFg2ntu |
 | Kibana           | http://192.168.50.200:5601 | kibana   | k2ReobFEsoxNm3DyZnkZmFPadSnCz6BjQhaLFoyB |
-| Netdata          | http://192.168.40.5:19999  | -        | -                                        |
+| Netdata          | http://192.168.50.5:19999  | -        | -                                        |
 | phpMyAdmin       | http://192.168.40.5:8110   | root     | qNpdZmkKuUKBK3D5nZ08KMZ5MnYrGEe2hzH6XC0i |
+| Skydive          | http://192.168.50.5:8085   | -        | -                                        |
 
 ## License
 
