@@ -26,10 +26,12 @@ The manager serves as a central entry point into the environment.
 
 ![Stack topology](https://raw.githubusercontent.com/osism/testbed/master/images/overview.png)
 
-## Supported cloud providers
+## Test status of cloud providers
 
-* Betacloud
-* Citycloud
+* Betacloud: Works
+* Citycloud: Works (tested Fra region)
+* OTC: Needs ``enable_snat``, ``enable_dhcp`` and older heat, still fails
+
 
 ## Notes
 
