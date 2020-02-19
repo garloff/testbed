@@ -260,6 +260,9 @@ nova
 [nova-conductor:children]
 nova
 
+[nova-super-conductor:children]
+nova
+
 [nova-consoleauth:children]
 nova
 
@@ -541,3 +544,8 @@ designate
 
 [designate-backend-bind9:children]
 designate
+
+# elasticsearch
+
+[elasticsearch-curator:children]
+elasticsearch
