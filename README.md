@@ -31,6 +31,7 @@ The manager serves as a central entry point into the environment.
 * Betacloud: Works
 * Citycloud: Works (tested Fra region)
 * OTC: Needs ``enable_snat``, ``enable_dhcp`` and older heat, still fails
+* teuto.stack: Currently lacks support for heat
 
 
 ## Notes
