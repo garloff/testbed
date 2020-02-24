@@ -52,6 +52,7 @@ enable_ceilometer: "yes"
 enable_cinder: "yes"
 enable_cinder_backup: "yes"
 enable_cloudkitty: "no"
+enable_designate: "yes"
 enable_gnocchi: "yes"
 enable_heat: "yes"
 enable_magnum: "yes"
@@ -99,12 +100,9 @@ keystone_token_provider: "fernet"
 
 # neutron
 neutron_plugin_agent: "openvswitch"
-
 enable_neutron_agent_ha: "yes"
 enable_neutron_dvr: "no"
-enable_neutron_fwaas: "yes"
 enable_neutron_qos: "yes"
-enable_neutron_vpnaas: "yes"
 
 # nova
 nova_console: novnc
@@ -119,6 +117,9 @@ octavia_loadbalancer_topology: "ACTIVE_STANDBY"
 # ceilometer
 ceilometer_database_type: gnocchi
 ceilometer_event_type: panko
+
+# designate
+designate_ns_record: openstack.osism.local
 
 ##########################################################
 # external ceph

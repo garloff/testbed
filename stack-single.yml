@@ -125,6 +125,8 @@ resources:
 
                   # NOTE(berendt): sudo -E does not work here because sudo -i is needed
 
+                  sudo -iu dragon sh -c 'INTERACTIVE=false osism-run custom cronjobs'
+
                   # prepare all systems
                   if [[ 0 -gt 0 ]]; then
                       sudo -iu dragon sh -c 'INTERACTIVE=false osism-generic facts'
@@ -180,10 +182,14 @@ resources:
                       else
                           sudo -iu dragon sh -c 'INTERACTIVE=false osism-kolla deploy keystone'
                           sudo -iu dragon sh -c 'INTERACTIVE=false osism-kolla deploy horizon'
+                          sudo -iu dragon sh -c 'INTERACTIVE=false osism-kolla deploy placement'
                           sudo -iu dragon sh -c 'INTERACTIVE=false osism-kolla deploy glance'
                           sudo -iu dragon sh -c 'INTERACTIVE=false osism-kolla deploy cinder'
                           sudo -iu dragon sh -c 'INTERACTIVE=false osism-kolla deploy neutron'
                           sudo -iu dragon sh -c 'INTERACTIVE=false osism-kolla deploy nova'
+
+                          sudo -iu dragon sh -c 'INTERACTIVE=false osism-run openstack bootstrap-basic'
+
                           sudo -iu dragon sh -c 'INTERACTIVE=false osism-kolla deploy heat'
                           sudo -iu dragon sh -c 'INTERACTIVE=false osism-kolla deploy gnocchi'
                           sudo -iu dragon sh -c 'INTERACTIVE=false osism-kolla deploy ceilometer'
@@ -191,9 +197,12 @@ resources:
                           sudo -iu dragon sh -c 'INTERACTIVE=false osism-kolla deploy panko'
                           sudo -iu dragon sh -c 'INTERACTIVE=false osism-kolla deploy magnum'
                           sudo -iu dragon sh -c 'INTERACTIVE=false osism-kolla deploy barbican'
+                          sudo -iu dragon sh -c 'INTERACTIVE=false osism-kolla deploy designate'
 
                           sudo -iu dragon sh -c 'INTERACTIVE=false osism-kolla deploy skydive'
                           sudo -iu dragon sh -c 'INTERACTIVE=false osism-generic manage-container -e container_action=stop -e container_name=skydive_agent -l skydive-agent'
+
+                          sudo -iu dragon sh -c 'INTERACTIVE=false osism-run openstack bootstrap-additional'
                       fi
                   fi
 

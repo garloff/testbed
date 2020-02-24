@@ -2,10 +2,11 @@
 
 [![Build Status](https://travis-ci.org/osism/testbed.svg?branch=master)](https://travis-ci.org/osism/testbed)
 
-Hyperconverged infrastructure (HCI) testbed based on OpenStack and Ceph, deployed by OSISM.
+Hyperconverged infrastructure (HCI) testbed based on OpenStack and Ceph, deployed by [OSISM](https://www.osism.de).
 
 - [Overview](#overview)
 - [Supported cloud providers](#supported-cloud-providers)
+- [Requirements](#requirements)
 - [Notes](#notes)
 - [Heat stack](#heat-stack)
 - [Network topology](#network-topology)
@@ -28,11 +29,29 @@ The manager serves as a central entry point into the environment.
 
 ## Test status of cloud providers
 
-* Betacloud: Works
-* Citycloud: Works (tested Fra region)
-* OTC: Needs ``enable_snat``, ``enable_dhcp`` and older heat, still fails
-* teuto.stack: Currently lacks support for heat
+* [Betacloud](https://www.betacloud.de): Works
+* [Citycloud](https://www.citycloud.com): Works (need to change disk names from sdX to vdX before deploying ceph)
+* [OTC](https://open-telekom-cloud.com/): Needs ``enable_snat``, ``enable_dhcp`` and older heat, still fails
+* [teuto.stack](https://teutostack.de/): Currently lacks support for heat
 
+## Requirements
+
+To use this testbed, a project on an OpenStack cloud environment is required. Cinder and Heat
+must be usable there as additional services.
+
+The testbed requires the following resources When using the default flavors.
+
+* 1 keypair
+* 5 security groups (appr. 30 security group rules)
+* 6 networks with 6 subnetworks
+* 1 router
+* 30 ports
+* 1 floating ip address
+* 4 instances
+* 9 volumes (90 GByte)
+* 4 instances (14 VCPUs, 52 GByte memory)
+* 1 stack
+>>>>>>> upstream/master
 
 ## Notes
 
@@ -40,7 +59,8 @@ The manager serves as a central entry point into the environment.
   testbed publicly.**
 * The configuration is intentionally kept quite static. Please no PRs to make the configuration
   more flexible/dynamic.
-* The OSISM documentation uses hostnames, examples, addresses etc. from this testbed.
+* The [OSISM documentation](https://docs.osism.de) uses hostnames, examples, addresses etc.
+  from this testbed.
 * Even if all components (storage, network, compute, control) are operated on the same nodes,
   there are separate networks. This is because in larger productive HCI environments, dedicated
   control nodes and network nodes are usually provided. It is also common to place storage
@@ -90,6 +110,11 @@ By default, the number of nodes is set to ``3``. The number can be adjusted via 
 ``number_of_nodes``. When adding additional nodes (``number_of_nodes > 3``) to the stack, they
 are not automatically added to the configuration.
 
+The same with reduction of the number of nodes. When removing nodes (``number_of_nodes < 3``),
+they are not automatically removed from the configuration.
+
+The configuration is only tested with 3 nodes. With more or less nodes, the configuration must
+be adjusted manually and problems may occur.
 
 ```
 jinja2 -o stack.yml -D number_of_nodes=6 templates/stack.yml.j2
@@ -108,6 +133,9 @@ are not automatically added to the Ceph configuration.
 ```
 jinja2 -o stack.yml -D number_of_volumes=4 templates/stack.yml.j2
 ```
+
+The configuration is only tested with 3 volumes. With more or less volumes, the configuration must
+be adjusted manually and problems may occur.
 
 ## Network topology
 
@@ -145,6 +173,9 @@ The nodes always have the same postfix in the networks.
 | testbed-node-3   | ``192.168.X.12/24``  |
 
 ### VIPs
+
+On the local workstation you should put the following entries into ``/etc/hosts``.
+Without these entries e.g. the VNC access to instances does not work.
 
 | Name             | Address                  | Domain                  |
 |------------------|--------------------------|-------------------------|
@@ -416,6 +447,14 @@ openstack --os-cloud testbed \
     192.168.90.0/24
   ```
 
+### Change versions
+
+* Go to ``/opt/configuration`` on the manager node
+* Run ``./scripts/set-openstack-version.sh stein`` to set the OpenStack version to ``stein``
+* Run ``./scripts/set-ceph-version.sh nautilus`` to set the Ceph version to ``nautilus``
+* Go to ``/home/dragon`` on the manager node
+* Run ``ansible-playbook manager-part-2.yml`` to update the manager
+
 ## Deploy
 
 * Infrastructure services
@@ -430,10 +469,16 @@ openstack --os-cloud testbed \
   /opt/configuration/scripts/deploy_ceph_services.sh
   ```
 
-* OpenStack services
+* Basic OpenStack services
 
   ```
-  /opt/configuration/scripts/deploy_openstack_services.sh
+  /opt/configuration/scripts/deploy_openstack_services_basic.sh
+  ```
+
+* Additional OpenStack services
+
+  ```
+  /opt/configuration/scripts/deploy_openstack_services_additional.sh
   ```
 
 ## Purge
@@ -524,7 +569,9 @@ This section describes how individual parts of the testbed can be deployed.
 * Ceph
 
   ```
-  osism-ceph env-hci; osism-run custom fetch-ceph-keys; osism-infrastructure helper --tags cephclient
+  osism-ceph env-hci
+  osism-run custom fetch-ceph-keys
+  osism-infrastructure helper --tags cephclient
   ```
 
 * Clustered infrastructure services
@@ -542,13 +589,15 @@ This section describes how individual parts of the testbed can be deployed.
 * Basic OpenStack services (also deploy `Infrastructure services`, `Clustered infrastructure services`, and `Ceph`)
 
   ```
-  osism-kolla deploy keystone,horizon,glance,cinder,neutron,nova
+  osism-kolla deploy keystone,horizon,placement,glance,cinder,neutron,nova
+  osism-infrastructure helper --tags openstackclient
+  osism-custom run bootstrap-basic
   ```
 
 * Additional OpenStack services (also deploy `Basic OpenStack services` and all requirements)
 
   ```
-  osism-kolla deploy heat,gnocchi,ceilometer,aodh,panko,magnum,barbican
+  osism-kolla deploy heat,gnocchi,ceilometer,aodh,panko,magnum,barbican,designate
   ```
 
 * Network analyzer (also deploy `Clustered infrastructure services`, `Infrastructure services`, and `Basic OpenStack services`)
