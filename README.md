@@ -62,7 +62,6 @@ The testbed requires the following resources When using the default flavors.
 * 9 volumes (90 GByte)
 * 4 instances (14 VCPUs, 52 GByte memory)
 * 1 stack
->>>>>>> upstream/master
 
 ## Notes
 
