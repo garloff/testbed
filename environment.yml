@@ -1,9 +1,10 @@
 ---
 parameter_defaults:
-  availability_zone: south-1
-  volume_az: south-1
-  flavor_controller: 4C-16GB-40GB
-  flavor_manager: 2C-4GB-20GB
+  availability_zone: eu-de-03
+  volume_az: eu-de-03
+  flavor_controller: s2.xlarge.4
+  flavor_manager: s2.large.2
   image: Ubuntu 18.04
-  public: public
-  volume_size_storage: 10
+  #image: Standard_Ubuntu_18.04_latest
+  public: admin_external_net
+  volume_size_storage: 12
