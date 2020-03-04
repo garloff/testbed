@@ -142,7 +142,6 @@ resources:
                       sudo -iu dragon sh -c 'INTERACTIVE=false osism-generic timezone'
                       sudo -iu dragon sh -c 'INTERACTIVE=false osism-generic hostname'
                       sudo -iu dragon sh -c 'INTERACTIVE=false osism-generic network'
-                      ifup -a
                       sudo -iu dragon sh -c 'INTERACTIVE=false osism-generic hosts'
 
                       # NOTE: Restart the manager services to update the /etc/hosts file
@@ -232,7 +231,13 @@ resources:
           - "echo 'network: {config: disabled}' > /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg"
           - "rm -f /etc/network/interfaces.d/50-cloud-init.cfg"
           - "mv /etc/netplan/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml.unused"
+          - "mkdir -p /etc/network/interfaces.d"
           - "for iface in $(ip -o link | cut -d: -f2 | tr -d ' ' | grep ^enp4s); do NM=ens${iface#enp4s}; ip link set dev ${iface} name $NM; done # OTC hack"
+          - "for iface in $(ip -o link | cut -d: -f2 | tr -d ' ' | grep ^ens[4-9] ); do echo 'auto '${iface}'\niface '${iface}' inet dhcp\n\npost-up ip route del default dev '${iface}' || exit 0\n' > /etc/network/interfaces.d/device-$iface; done"
+          - "sed -i '/Type=/iStartLimitBurst=8' /lib/systemd/system/systemd-resolved.service"
+          - "systemctl daemon-reload"
+          - "systemctl restart systemd-networkd"
+          - "ifup -a"
           - "/root/run.sh"
         final_message: "The system is finally up, after $UPTIME seconds"
 
@@ -304,6 +309,8 @@ resources:
     properties:
       network: {get_resource: net_internal}
       cidr: 192.168.50.0/24
+      #dns_nameservers: [ 100.125.4.25, 9.9.9.9 ]
+      #dns_nameservers: null
       gateway_ip: null
       enable_dhcp: true
       allocation_pools:
