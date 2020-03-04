@@ -166,7 +166,7 @@ resources:
                       sudo -iu dragon sh -c 'INTERACTIVE=false osism-generic timezone'
                       sudo -iu dragon sh -c 'INTERACTIVE=false osism-generic hostname'
                       sudo -iu dragon sh -c 'INTERACTIVE=false osism-generic network'
-                      sudo -iu dragon sh -c 'ifup -a'
+                      ifup -a
                       sudo -iu dragon sh -c 'INTERACTIVE=false osism-generic hosts'
 
                       # NOTE: Restart the manager services to update the /etc/hosts file
