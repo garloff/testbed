@@ -43,10 +43,15 @@ watch:
 			MGR_ADR=$$(openstack stack output show $(STACKNAME) manager_address -f value -c output_value); \
 		fi; \
 		if test -n "$$MGR_ADR"; then ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa.testbed ubuntu@$$MGR_ADR "sudo tail -n16 /var/log/cloud-init-output.log"; fi; \
-		STAT=$$(openstack stack list -f value -c "Stack Status"); \
+		STAT=$$(openstack stack list -f value -c "Stack Name" -c "Stack Status" | grep $(STACKNAME) | cut -d' ' -f2); \
 		if test "$$STAT" == "CREATE_COMPLETE"; then break; fi; \
 		echo; sleep 30; \
 	done
+
+
+.deploy.$(STACKNAME):
+	STAT=$$(openstack stack list -f value -c "Stack Name" -c "Stack Status" | grep $(STACKNAME) | cut -d' ' -f2); \
+	if test -n "$$STAT"; then touch .deploy.$(STACKNAME); else echo "use make deploy or deploy-infra or ...."; exit 1; fi
 
 ~/.ssh/id_rsa.$(STACKNAME): .deploy.$(STACKNAME)
 	openstack stack output show $(STACKNAME) private_key -f value -c output_value > $@
