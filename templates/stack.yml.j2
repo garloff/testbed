@@ -402,6 +402,7 @@ resources:
     properties:
       network: {get_resource: net_management}
       cidr: 192.168.40.0/24
+      dns_nameservers: [ 100.125.4.25, 9.9.9.9 ]
       allocation_pools:
         -
           start: 192.168.40.100
