@@ -166,6 +166,7 @@ resources:
                       sudo -iu dragon sh -c 'INTERACTIVE=false osism-generic timezone'
                       sudo -iu dragon sh -c 'INTERACTIVE=false osism-generic hostname'
                       sudo -iu dragon sh -c 'INTERACTIVE=false osism-generic network'
+                      sudo -iu dragon sh -c 'ifup -a'
                       sudo -iu dragon sh -c 'INTERACTIVE=false osism-generic hosts'
 
                       # NOTE: Restart the manager services to update the /etc/hosts file
@@ -255,6 +256,7 @@ resources:
           - "echo 'network: {config: disabled}' > /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg"
           - "rm -f /etc/network/interfaces.d/50-cloud-init.cfg"
           - "mv /etc/netplan/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml.unused"
+          - "for iface in $(ip -o link | cut -d: -f2 | tr -d ' ' | grep ^enp4s); do NM=ens${iface#enp4s}; ip link set dev ${iface} name $NM; done # OTC hack"
           - "/root/run.sh"
         final_message: "The system is finally up, after $UPTIME seconds"
 {% if number_of_nodes|default(3)|int > 0 %}
@@ -307,8 +309,10 @@ resources:
           - "rm -f /etc/network/interfaces.d/50-cloud-init.cfg"
           - "mv /etc/netplan/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml.unused"
           - "echo 'auto lo\niface lo inet loopback\n\nsource /etc/network/interfaces.d/*' > /etc/network/interfaces"
+          - "for iface in $(ip -o link | cut -d: -f2 | tr -d ' ' | grep ^enp4s); do NM=ens${iface#enp4s}; ip link set dev ${iface} name $NM; done # OTC hack"
           - "for iface in $(ip -o link | cut -d: -f2 | tr -d ' ' | grep ^ens); do echo 'auto '${iface}'\niface '${iface}' inet dhcp\n' > '/etc/network/interfaces.d/device-'$iface; done"
           - "for iface in $(ip -o link | cut -d: -f2 | tr -d ' ' | grep ^ens | grep -v ens3); do echo '\n\npost-up ip route del default dev '${iface} || exit 0'\n' >> '/etc/network/interfaces.d/device-'$iface; done"
+          - "ifup -a"
           - "/root/run.sh"
         final_message: "The system is finally up, after $UPTIME seconds"
 {% endif %}
