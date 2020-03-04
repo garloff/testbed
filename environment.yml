@@ -2,7 +2,7 @@
 parameter_defaults:
   availability_zone: eu-de-03
   volume_az: eu-de-03
-  flavor_controller: s2.xlarge.4
+  flavor_node: s2.xlarge.4
   flavor_manager: s2.large.2
   image: Ubuntu 18.04
   #image: Standard_Ubuntu_18.04_latest
