@@ -25,6 +25,9 @@ deploy-infra-ceph-openstack: stack.yml environment.yml
 clean:
 	openstack stack delete -y $(STACKNAME)
 
+watch:
+	watch -n 30 "openstack stack list; openstack server list; openstack volume list"
+
 ~/.ssh/id_rsa.testbed:
 	openstack stack output show $(STACKNAME) private_key -f value -c output_value > $@
 	chmod 0600 $@
@@ -32,4 +35,4 @@ clean:
 MANAGER_ADDRESS:
 	@openstack stack output show $(STACKNAME) manager_address -f value -c output_value
 
-.PHONY: clean ~/.ssh/id_rsa.testbed MANAGER_ADDRESS deploy deploy-infra deploy-infra-ceph deploy-infra-ceph-openstack
+.PHONY: clean watch ~/.ssh/id_rsa.testbed MANAGER_ADDRESS deploy deploy-infra deploy-infra-ceph deploy-infra-ceph-openstack
