@@ -82,7 +82,7 @@ enable_central_logging: "yes"
 
 # elasticsearch
 
-es_heap_size: "4g"
+es_heap_size: "1g"
 
 # rabbitmq
 
@@ -103,6 +103,9 @@ neutron_plugin_agent: "openvswitch"
 enable_neutron_agent_ha: "yes"
 enable_neutron_dvr: "no"
 enable_neutron_qos: "yes"
+
+# NOTE: is only needed for Rocky
+neutron_fwaas_version: "v2"
 
 # nova
 nova_console: novnc
