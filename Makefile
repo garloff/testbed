@@ -45,6 +45,7 @@ watch:
 		if test -n "$$MGR_ADR"; then ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa.testbed ubuntu@$$MGR_ADR "sudo tail -n16 /var/log/cloud-init-output.log"; fi; \
 		STAT=$$(openstack stack list -f value -c "Stack Name" -c "Stack Status" | grep $(STACKNAME) | cut -d' ' -f2); \
 		if test "$$STAT" == "CREATE_COMPLETE"; then break; fi; \
+		if test "$$STAT" == "CREATE_FAILED"; then openstack stack show $(STACKNAME) -f value -c "stack_status_reason"; break; fi; \
 		echo; sleep 30; \
 	done
 
