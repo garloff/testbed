@@ -30,6 +30,10 @@ parameters:
     type: string
     default: south-1
 
+  volume_az:
+    type: string
+    default: south-1
+
   public:
     type: string
     constraints:
@@ -603,6 +607,7 @@ resources:
     properties:
       name: testbed-node-0-volume-0
       size: {get_param: volume_size_storage}
+      availability_zone: {get_param: volume_az}
 
   node_0_volume_0_attachment:
     type: OS::Cinder::VolumeAttachment
@@ -615,6 +620,7 @@ resources:
     properties:
       name: testbed-node-0-volume-1
       size: {get_param: volume_size_storage}
+      availability_zone: {get_param: volume_az}
 
   node_0_volume_1_attachment:
     type: OS::Cinder::VolumeAttachment
@@ -627,6 +633,7 @@ resources:
     properties:
       name: testbed-node-0-volume-2
       size: {get_param: volume_size_storage}
+      availability_zone: {get_param: volume_az}
 
   node_0_volume_2_attachment:
     type: OS::Cinder::VolumeAttachment
@@ -719,6 +726,7 @@ resources:
     properties:
       name: testbed-node-1-volume-0
       size: {get_param: volume_size_storage}
+      availability_zone: {get_param: volume_az}
 
   node_1_volume_0_attachment:
     type: OS::Cinder::VolumeAttachment
@@ -731,6 +739,7 @@ resources:
     properties:
       name: testbed-node-1-volume-1
       size: {get_param: volume_size_storage}
+      availability_zone: {get_param: volume_az}
 
   node_1_volume_1_attachment:
     type: OS::Cinder::VolumeAttachment
@@ -743,6 +752,7 @@ resources:
     properties:
       name: testbed-node-1-volume-2
       size: {get_param: volume_size_storage}
+      availability_zone: {get_param: volume_az}
 
   node_1_volume_2_attachment:
     type: OS::Cinder::VolumeAttachment
@@ -835,6 +845,7 @@ resources:
     properties:
       name: testbed-node-2-volume-0
       size: {get_param: volume_size_storage}
+      availability_zone: {get_param: volume_az}
 
   node_2_volume_0_attachment:
     type: OS::Cinder::VolumeAttachment
@@ -847,6 +858,7 @@ resources:
     properties:
       name: testbed-node-2-volume-1
       size: {get_param: volume_size_storage}
+      availability_zone: {get_param: volume_az}
 
   node_2_volume_1_attachment:
     type: OS::Cinder::VolumeAttachment
@@ -859,6 +871,7 @@ resources:
     properties:
       name: testbed-node-2-volume-2
       size: {get_param: volume_size_storage}
+      availability_zone: {get_param: volume_az}
 
   node_2_volume_2_attachment:
     type: OS::Cinder::VolumeAttachment
