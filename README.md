@@ -41,8 +41,8 @@ The following stable releases are supported. The development branch usually work
 ## Test status of cloud providers
 
 * [Betacloud](https://www.betacloud.de): Works
-* [Citycloud](https://www.citycloud.com): Works (need to change disk names from sdX to vdX before deploying ceph on manager node ``/opt/configuration/inventory/host_vars/testbed-node-?.osism.local.yml``)
-* [OTC](https://open-telekom-cloud.com/): Needs ``enable_snat``, ``enable_dhcp`` and older heat, still fails
+* [Citycloud](https://www.citycloud.com): Works (need to change disk names from sdX to vdX, so pass ``--parameter drives_vdx=true``).
+* [OTC](https://open-telekom-cloud.com/): Needs ``enable_snat``, ``enable_dhcp``, ``dns_nameservers`` and older heat version, ``volume_az`` set to the same as ``availability_zone``, ``drives_vdx: true``, renaming of NICs from ``enp4sX`` to ``ensX`` (followed by ``ifup -a``). All of these changes are included in the ``OTC`` branch of testbed. In addition, a customer Ubuntu 18.04 is needed, registered with a larger ``min_disk`` (use 30G or more) and two patches to cloud-init to prefer ens3 over enp4sX (to retrieve meta-data via the network) and to accept text/x-shellscript as mimetype for the cloud-config part of the user-data.
 * [teuto.stack](https://teutostack.de/): Currently lacks support for heat
 
 ## Requirements
