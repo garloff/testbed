@@ -31,7 +31,7 @@ clean:
 	@rm -f .deploy.$(STACKNAME) .MANAGER_ADDRESS.$(STACKNAME)
 	rm -f ~/.ssh/id_rsa.$(STACKNAME)
 
-watch:
+watch: .deploy.$(STACKNAME)
 	MGR_ADR=""; STAT=""; while true; do\
 		date; openstack stack list; \
 		SRV=$$(openstack server list -f value -c "Name" -c "Status" | grep testbed-manager | cut -d ' ' -f2); \
