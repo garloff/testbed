@@ -440,8 +440,6 @@ resources:
     properties:
       network: {get_resource: net_internal}
       cidr: 192.168.50.0/24
-      #dns_nameservers: [ 100.125.4.25, 9.9.9.9 ]
-      #dns_nameservers: null
       gateway_ip: null
       enable_dhcp: true
       allocation_pools:
@@ -459,8 +457,6 @@ resources:
     properties:
       network: {get_resource: net_provider}
       cidr: 192.168.100.0/24
-      #dns_nameservers: [ 100.125.4.25, 9.9.9.9 ]
-      #dns_nameservers: null
       gateway_ip: null
       enable_dhcp: true
       allocation_pools:
@@ -478,8 +474,6 @@ resources:
     properties:
       network: {get_resource: net_external}
       cidr: 192.168.90.0/24
-      #dns_nameservers: [ 100.125.4.25, 9.9.9.9 ]
-      #dns_nameservers: null
       gateway_ip: null
       enable_dhcp: true
       allocation_pools:
@@ -511,8 +505,6 @@ resources:
     properties:
       network: {get_resource: net_storage_frontend}
       cidr: 192.168.70.0/24
-      #dns_nameservers: [ 100.125.4.25, 9.9.9.9 ]
-      #dns_nameservers: null
       gateway_ip: null
       enable_dhcp: true
       allocation_pools:
@@ -530,8 +522,6 @@ resources:
     properties:
       network: {get_resource: net_storage_backend}
       cidr: 192.168.80.0/24
-      #dns_nameservers: [ 100.125.4.25, 9.9.9.9 ]
-      #dns_nameservers: null
       gateway_ip: null
       enable_dhcp: true
       allocation_pools:
