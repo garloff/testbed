@@ -40,6 +40,7 @@ watch:
 			openstack stack output show $(STACKNAME) private_key -f value -c output_value > ~/.ssh/id_rsa.testbed; \
 			chmod 0600 ~/.ssh/id_rsa.testbed; \
 			MGR_ADR=$$(openstack stack output show $(STACKNAME) manager_address -f value -c output_value); \
+			echo "MANAGER_ADDRESS=$$MGR_ADR" > .MANAGER_ADDRESS.$(STACKNAME); \
 		fi; \
 		if test -n "$$MGR_ADR"; then ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa.testbed ubuntu@$$MGR_ADR "sudo tail -n16 /var/log/cloud-init-output.log"; fi; \
 		STAT=$$(openstack stack list -f value -c "Stack Name" -c "Stack Status" | grep $(STACKNAME) | cut -d' ' -f2); \
