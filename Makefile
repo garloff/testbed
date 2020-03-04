@@ -28,9 +28,8 @@ deploy-infra-ceph-openstack: stack.yml environment.yml
 
 clean:
 	openstack stack delete -y $(STACKNAME)
-	@rm -f .deploy.$(STACKNAME)
-	@rm -f .MANAGER_ADDRESS.$(STACKNAME)
-	@#rm -f ~/.ssh/id_rsa.$(STACKNAME)
+	@rm -f .deploy.$(STACKNAME) .MANAGER_ADDRESS.$(STACKNAME)
+	rm -f ~/.ssh/id_rsa.$(STACKNAME)
 
 watch:
 	MGR_ADR=""; STAT=""; while true; do\
