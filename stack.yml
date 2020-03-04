@@ -415,7 +415,7 @@ resources:
       network: {get_resource: net_internal}
       cidr: 192.168.50.0/24
       gateway_ip: null
-      enable_dhcp: true
+      enable_dhcp: false
       allocation_pools:
         -
           start: 192.168.50.100
@@ -432,7 +432,7 @@ resources:
       network: {get_resource: net_provider}
       cidr: 192.168.100.0/24
       gateway_ip: null
-      enable_dhcp: true
+      enable_dhcp: false
       allocation_pools:
         -
           start: 192.168.100.100
@@ -449,7 +449,7 @@ resources:
       network: {get_resource: net_external}
       cidr: 192.168.90.0/24
       gateway_ip: null
-      enable_dhcp: true
+      enable_dhcp: false
       allocation_pools:
         -
           start: 192.168.90.100
@@ -480,7 +480,7 @@ resources:
       network: {get_resource: net_storage_frontend}
       cidr: 192.168.70.0/24
       gateway_ip: null
-      enable_dhcp: true
+      enable_dhcp: false
       allocation_pools:
         -
           start: 192.168.70.100
@@ -497,7 +497,7 @@ resources:
       network: {get_resource: net_storage_backend}
       cidr: 192.168.80.0/24
       gateway_ip: null
-      enable_dhcp: true
+      enable_dhcp: false
       allocation_pools:
         -
           start: 192.168.80.100
