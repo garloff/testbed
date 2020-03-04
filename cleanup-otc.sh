@@ -33,3 +33,4 @@ if [[ "$STACK" == *"$STACK_NM"* ]]; then
   openstack stack show $STACK_NM -f value -c "stack_status_reason"
   exit 3
 fi
+rm -f .deploy.$STACK_NM .MANAGER_ADDRESS.$STACK_NM ~/.ssh/id_rsa.$STACK_NM
