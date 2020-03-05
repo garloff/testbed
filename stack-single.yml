@@ -250,7 +250,7 @@ resources:
           - "for iface in $(ip -o link | cut -d: -f2 | tr -d ' ' | grep ^enp4s); do NM=ens${iface#enp4s}; ip link set dev ${iface} name $NM; done # OTC hack"
           - "for iface in $(ip -o link | cut -d: -f2 | tr -d ' ' | grep ^ens); do echo 'auto '${iface}'\niface '${iface}' inet dhcp\n' > /etc/network/interfaces.d/device-$iface; done"
           - "for iface in $(ip -o link | cut -d: -f2 | tr -d ' ' | grep ^ens | grep -v ens3); do echo '\n\npost-up ip route del default dev '${iface}' || exit 0\n' >> /etc/network/interfaces.d/device-$iface; done"
-          - "sed -i '/Type=/iStartLimitBurst=8' /lib/systemd/system/systemd-resolved.service"
+          - "sed -i '/Type=/iStartLimitBurst=12' /lib/systemd/system/systemd-resolved.service"
           - "systemctl daemon-reload"
           - "systemctl restart systemd-networkd"
           - "ifup -a"
