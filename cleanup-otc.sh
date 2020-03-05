@@ -31,6 +31,7 @@ STACK=$(openstack stack list -f value -c "Stack Name" -c "Stack Status")
 if [[ "$STACK" == *"$STACK_NM"* ]]; then
   echo "Stack $STACK_NM still not gone"
   openstack stack show $STACK_NM -f value -c "stack_status_reason"
+  openstack stack delete -y $STACK_NM
   exit 3
 fi
 rm -f .deploy.$STACK_NM .MANAGER_ADDRESS.$STACK_NM ~/.ssh/id_rsa.$STACK_NM
