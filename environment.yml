@@ -9,5 +9,5 @@ parameter_defaults:
   public: admin_external_net
   volume_size_storage: 12
   drives_vdx: true
-  ceph_version: nautilus
+  ceph_version: luminous
   openstack_version: train
