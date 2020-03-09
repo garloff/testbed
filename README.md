@@ -264,6 +264,10 @@ The defaults for the stack parameters are intended for the Betacloud.
     <td><code>south-1</code></td>
   </tr>
   <tr>
+    <td><code>volume_availability_zone</code></td>
+    <td><code>south-1</code></td>
+  </tr>
+  <tr>
     <td><code>flavor_node</code></td>
     <td><code>4C-16GB-40GB</code></td>
   </tr>
@@ -284,16 +288,16 @@ The defaults for the stack parameters are intended for the Betacloud.
     <td><code>10</code></td>
   </tr>
   <tr>
-    <td><code>drives_vdx</code></td>
-    <td><code>false</code></td>
-  </tr>
-  <tr>
     <td><code>ceph_version</code></td>
     <td><code>luminous</code></td>
   </tr>
   <tr>
     <td><code>openstack_version</code></td>
     <td><code>rocky</code></td>
+  </tr>
+  <tr>
+    <td><code>drives_vdx</code></td>
+    <td><code>false</code></td>
   </tr>
 </table>
 
@@ -304,14 +308,15 @@ Further details on environments on https://docs.openstack.org/heat/latest/templa
 ---
 parameters:
   availability_zone: south-1
-  flavor_controller: 4C-16GB-40GB
+  volume_availability_zone: south-1
+  flavor_node: 4C-16GB-40GB
   flavor_manager: 2C-4GB-20GB
   image: Ubuntu 18.04
   public: public
   volume_size_storage: 10
-  drives_vdx: false
   ceph_version: luminous
   openstack_version: rocky
+  drives_vdx: false
 ```
 
 ## Initialization
@@ -332,6 +337,10 @@ openstack --os-cloud testbed \
 If the check is successful, the stack can be created.
 You can set the ``export OS_CLOUD=testbed`` environment variable to avoid typing
 ``--os-cloud testbed`` repeatedly.
+
+Note that you can set the ``export OS_CLOUD=testbed`` environment variable to avoid typing
+``--os-cloud testbed`` repeatedly.
+
 
 ```
 openstack --os-cloud testbed \
@@ -639,7 +648,7 @@ This section describes how individual parts of the testbed can be deployed.
 * Ceph
 
   ```
-  osism-ceph env-hci
+  osism-ceph testbed
   osism-run custom fetch-ceph-keys
   osism-infrastructure helper --tags cephclient
   ```
