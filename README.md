@@ -450,6 +450,7 @@ The ``--timeout 9000`` parameter avoids heat giving up too early.
 (The default timeout for heat stacks is typically 3600.)
 
 This can also be achieved using ``make deploy-openstack``.
+
 The parameter ``--parameter drives_vdx=true`` can be passed (or ``drives_vdx: true`` be set
 in ``environment.yml``) to change the testbed to use virtio disk names (``vdx``) rather than
 SCSI disk names (``sdx``).
