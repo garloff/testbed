@@ -23,6 +23,8 @@ endif
 
 default: stack.yml stack-single.yml
 
+default: stack.yml stack-single.yml
+
 stack.yml: templates/stack.yml.j2
 	jinja2 -o $@ $(TMPL_PARAMS) $^
 
