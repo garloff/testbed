@@ -59,7 +59,7 @@ The testbed requires the following resources When using the default flavors.
 * 30 ports
 * 1 floating ip address
 * 4 instances
-* 9 volumes (90 GByte)
+* 9 volumes (min 90 GB) plus 140GB root disks (depends on flavors)
 * 4 instances (14 VCPUs, 52 GByte memory)
 * 1 stack
 
@@ -242,11 +242,7 @@ to use further services.
 
 * ``python-openstackclient`` must be installed
 * Heat, the OpenStack orchestration service,  must be usable on the cloud environment
-<<<<<<< HEAD
-* a ``clouds.yml`` and ``secure.yml`` must be created (https://docs.openstack.org/python-openstackclient/latest/configuration/index.html#clouds-yaml) or alternatively (not recommended) the old ``OS_`` environment setting style be used (via sourcing an approipriate ``openrc`` file).
-=======
 * a ``clouds.yml`` and ``secure.yml`` must be created (https://docs.openstack.org/python-openstackclient/latest/configuration/index.html#clouds-yaml) or alternatively (not recommended) the old ``OS_`` environment setting style be used (via sourcing an appropriate ``openrc`` file).
->>>>>>> upstream/master
 
 ## Configuration
 
@@ -262,7 +258,11 @@ The defaults for the stack parameters are intended for the Betacloud.
     <td><code>south-1</code></td>
   </tr>
   <tr>
-    <td><code>flavor_controller</code></td>
+    <td><code>volume_availability_zone</code></td>
+    <td><code>south-1</code></td>
+  </tr>
+  <tr>
+    <td><code>flavor_node</code></td>
     <td><code>4C-16GB-40GB</code></td>
   </tr>
   <tr>
@@ -281,6 +281,14 @@ The defaults for the stack parameters are intended for the Betacloud.
     <td><code>volume_size_storage</code></td>
     <td><code>10</code></td>
   </tr>
+  <tr>
+    <td><code>ceph_version</code></td>
+    <td><code>luminous</code></td>
+  </tr>
+  <tr>
+    <td><code>openstack_version</code></td>
+    <td><code>rocky</code></td>
+  </tr>
 </table>
 
 With the file ``environment.yml`` the parameters of the stack can be adjusted.
@@ -290,11 +298,14 @@ Further details on environments on https://docs.openstack.org/heat/latest/templa
 ---
 parameters:
   availability_zone: south-1
-  flavor_controller: 4C-16GB-40GB
+  volume_availability_zone: south-1
+  flavor_node: 4C-16GB-40GB
   flavor_manager: 2C-4GB-20GB
   image: Ubuntu 18.04
   public: public
   volume_size_storage: 10
+  ceph_version: luminous
+  openstack_version: rocky
 ```
 
 ## Initialization
@@ -313,6 +324,10 @@ openstack --os-cloud testbed \
 ```
 
 If the check is successful, the stack can be created.
+
+Note that you can set the ``export OS_CLOUD=testbed`` environment variable to avoid typing
+``--os-cloud testbed`` repeatedly.
+
 
 ```
 openstack --os-cloud testbed \
@@ -407,6 +422,11 @@ openstack --os-cloud testbed \
   -t stack.yml testbed
 ```
 
+The parameters ``ceph_version`` and ``openstack_version`` change the deployed versions of
+Ceph and OpenStack respectively from their defaults ``luminous`` and ``rocky``.
+For Ceph, ``nautilus`` can be used, for OpenStack, we can also test ``stein`` and ``train``.
+It should be noted that the defaults are tested best.
+
 ## Usage
 
 * Get private SSH key
@@ -473,6 +493,9 @@ openstack --os-cloud testbed \
 * Run ``./scripts/set-ceph-version.sh nautilus`` to set the Ceph version to ``nautilus``
 * Go to ``/home/dragon`` on the manager node
 * Run ``ansible-playbook manager-part-2.yml`` to update the manager
+
+This can also be achieved automatically by passing the wanted versions inside the environment
+``ceph_version`` and ``openstack_version`` respectively.
 
 ## Deploy
 
@@ -588,7 +611,7 @@ This section describes how individual parts of the testbed can be deployed.
 * Ceph
 
   ```
-  osism-ceph env-hci
+  osism-ceph testbed
   osism-run custom fetch-ceph-keys
   osism-infrastructure helper --tags cephclient
   ```

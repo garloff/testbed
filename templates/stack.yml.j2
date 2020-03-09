@@ -31,7 +31,7 @@ parameters:
     type: string
     default: south-1
 
-  volume_az:
+  volume_availability_zone:
     type: string
     default: south-1
 
@@ -53,10 +53,6 @@ parameters:
     type: boolean
     default: false
 
-  drives_vdx:
-    type: boolean
-    default: false
-
 # select luminous or nautilus
   ceph_version:
     type: string
@@ -66,6 +62,10 @@ parameters:
   openstack_version:
     type: string
     default: rocky
+
+  drives_vdx:
+    type: boolean
+    default: false
 
 ##########
 resources:
@@ -124,9 +124,9 @@ resources:
                   deploy_ceph: {get_param: deploy_ceph}
                   deploy_infrastructure: {get_param: deploy_infrastructure}
                   deploy_openstack: {get_param: deploy_openstack}
-                  drives_vdx: {get_param: drives_vdx}
                   ceph_version: {get_param: ceph_version}
                   openstack_version: {get_param: openstack_version}
+                  drives_vdx: {get_param: drives_vdx}
                   wc_notify: {get_attr: ['manager_wait_handle', 'curl_cli']}
                 template: |
                   #!/usr/bin/env bash
@@ -226,7 +226,7 @@ resources:
 
                   # deploy ceph services
                   if [[ "deploy_ceph" == "True" ]]; then
-                      sudo -iu dragon sh -c 'INTERACTIVE=false osism-ceph env-hci'
+                      sudo -iu dragon sh -c 'INTERACTIVE=false osism-ceph testbed'
                       sudo -iu dragon sh -c 'INTERACTIVE=false osism-run custom fetch-ceph-keys'
                       sudo -iu dragon sh -c 'INTERACTIVE=false osism-infrastructure helper --tags cephclient'
                   fi
@@ -653,7 +653,7 @@ resources:
     properties:
       name: testbed-node-{{ n }}-volume-{{ m }}
       size: {get_param: volume_size_storage}
-      availability_zone: {get_param: volume_az}
+      availability_zone: {get_param: volume_availability_zone}
 
   node_{{ n }}_volume_{{ m }}_attachment:
     type: OS::Cinder::VolumeAttachment
