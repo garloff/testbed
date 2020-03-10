@@ -78,11 +78,12 @@ watch: .deploy.$(STACKNAME)
 		echo; sleep 30; \
 	done
 
-
+# Look for stack
 .deploy.$(STACKNAME):
 	STAT=$$(openstack stack list -f value -c "Stack Name" -c "Stack Status" | grep $(STACKNAME) | cut -d' ' -f2); \
 	if test -n "$$STAT"; then touch .deploy.$(STACKNAME); else echo "use make deploy or deploy-infra or ...."; exit 1; fi
 
+# Get output
 ~/.ssh/id_rsa.$(STACKNAME): .deploy.$(STACKNAME)
 	openstack stack output show $(STACKNAME) private_key -f value -c output_value > $@
 	chmod 0600 $@
@@ -92,6 +93,7 @@ watch: .deploy.$(STACKNAME)
 	echo "MANAGER_ADDRESS=$$MANAGER_ADDRESS" > $@; \
 	echo $$MANAGER_ADDRESS
 
+# Convenience: sshuttle invocation
 sshuttle: ~/.ssh/id_rsa.$(STACKNAME) .MANAGER_ADDRESS.$(STACKNAME)
 	source ./.MANAGER_ADDRESS.$(STACKNAME); \
 	sshuttle --ssh-cmd "ssh -i $<" -r dragon@$$MANAGER_ADDRESS 192.168.40.0/24 192.168.50.0/24 192.168.90.0/24
@@ -100,4 +102,5 @@ ssh: ~/.ssh/id_rsa.$(STACKNAME) .MANAGER_ADDRESS.$(STACKNAME)
 	source ./.MANAGER_ADDRESS.$(STACKNAME); \
 	ssh -i $< dragon@$$MANAGER_ADDRESS
 
-.PHONY: clean watch sshuttle ssh_manager deploy deploy-infra deploy-infra-ceph deploy-infra-ceph-openstack
+# avoid confusing make by non-file targets
+.PHONY: clean clean-wait reset watch sshuttle ssh_manager dry-run deploy deploy-infra deploy-infra-ceph deploy-infra-ceph-openstack
