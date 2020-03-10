@@ -1,36 +1,65 @@
 # Makefile
-# Common operations
-default: stack.yml stack-single.yml
+# Shortcuts to invoke OSISM testbed stack generation
+# Pass STACKNAME=XXX to change the name of the deployed stack (default: testbed),
+# STACK_PARAMS= (e.g. --parameter XYZ=abs) if you want to pass parameter to heat
+# TMPL_PARAMS= (e.g. -Dnumber_of_volumes=4) if you want to modify the stack
+#  generation from the template.
+#
+# (c) Kurt Garloff <scs@garloff.de>, 3/2020, Apache2 License
 
 STACKNAME = testbed
 
+default: stack.yml stack-single.yml
+
 stack.yml: templates/stack.yml.j2
-	jinja2 -o $@ $^
+	jinja2 -o $@ $(TMPL_PARAMS) $^
 
 stack-single.yml: templates/stack.yml.j2
-	jinja2 -o $@ -Dnumber_of_nodes=0 $^
+	jinja2 -o $@ $(TMPL_PARAMS) -Dnumber_of_nodes=0 $^
+
+dry-run: stack.yml environment.yml
+	openstack stack create --dry-run -t $< -e environment.yml $(STACK_PARAMS) $(STACKNAME) -f json; echo
+
+create: deploy
 
 deploy: stack.yml environment.yml
 	@touch .deploy.$(STACKNAME)
-	openstack stack create -t $< -e environment.yml $(STACK_PARAMS) $(STACKNAME)
+	openstack stack create --timeout 3000 -t $< -e environment.yml $(STACK_PARAMS) $(STACKNAME)
 
 deploy-infra: stack.yml environment.yml
 	@touch .deploy.$(STACKNAME)
-	openstack stack create -t $< -e environment.yml $(STACK_PARAMS) --parameter deploy_infrastructure=true $(STACKNAME)
+	openstack stack create --timeout 4200 -t $< -e environment.yml $(STACK_PARAMS) --parameter deploy_infrastructure=true $(STACKNAME)
 
-deploy-infra-ceph: stack.yml environment.yml
+deploy-ceph: stack.yml environment.yml
 	@touch .deploy.$(STACKNAME)
-	openstack stack create -t $< -e environment.yml $(STACK_PARAMS) --parameter deploy_infrastructure=true --parameter deploy_ceph=true $(STACKNAME)
+	openstack stack create --timeout 4200 -t $< -e environment.yml $(STACK_PARAMS) --parameter deploy_ceph=true $(STACKNAME)
 
-deploy-infra-ceph-openstack: stack.yml environment.yml
+# do it all
+deploy-openstack: stack.yml environment.yml
 	@touch .deploy.$(STACKNAME)
-	openstack stack create -t $< -e environment.yml $(STACK_PARAMS) --parameter deploy_infrastructure=true --parameter deploy_ceph=true --parameter deploy_openstack=true $(STACKNAME)
+	openstack stack create --timeout 9000 -t $< -e environment.yml $(STACK_PARAMS) --parameter deploy_infrastructure=true --parameter deploy_ceph=true --parameter deploy_openstack=true $(STACKNAME)
 
+# this will not do kolla purges etc. so do this before manually if you have deployed infra, ceph or openstack
+update: stack.yml environment.yml
+	@touch .deploy.$(STACKNAME)
+	openstack stack update -t $< -e environment.yml $(STACK_PARAMS) $(STACKNAME)
+
+# Cleanup
 clean:
 	openstack stack delete -y $(STACKNAME)
 	@rm -f .deploy.$(STACKNAME) .MANAGER_ADDRESS.$(STACKNAME)
 	rm -f ~/.ssh/id_rsa.$(STACKNAME)
 
+clean-wait:
+	openstack stack delete -y --wait $(STACKNAME)
+	@rm -f .deploy.$(STACKNAME) .MANAGER_ADDRESS.$(STACKNAME)
+	rm -f ~/.ssh/id_rsa.$(STACKNAME)
+
+# To recover from stale cached ssh-key and MANAGER_ADDRESS
+reset:
+	@rm .deploy.$(STACKNAME)
+
+# Watch the creation of the stack
 watch: .deploy.$(STACKNAME)
 	MGR_ADR=""; STAT=""; while true; do\
 		date; openstack stack list; \
@@ -67,7 +96,7 @@ sshuttle: ~/.ssh/id_rsa.$(STACKNAME) .MANAGER_ADDRESS.$(STACKNAME)
 	source ./.MANAGER_ADDRESS.$(STACKNAME); \
 	sshuttle --ssh-cmd "ssh -i $<" -r dragon@$$MANAGER_ADDRESS 192.168.40.0/24 192.168.50.0/24 192.168.90.0/24
 
-ssh_manager: ~/.ssh/id_rsa.$(STACKNAME) .MANAGER_ADDRESS.$(STACKNAME)
+ssh: ~/.ssh/id_rsa.$(STACKNAME) .MANAGER_ADDRESS.$(STACKNAME)
 	source ./.MANAGER_ADDRESS.$(STACKNAME); \
 	ssh -i $< dragon@$$MANAGER_ADDRESS
 
