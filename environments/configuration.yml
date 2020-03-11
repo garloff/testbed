@@ -16,7 +16,7 @@ grub_hidden_timeout: false
 configuration_directory: /opt/configuration
 
 configuration_type: git
-configuration_git_version: master
+configuration_git_version: custom-facts
 configuration_git_host: github.com
 configuration_git_port: 443
 configuration_git_repository: osism/testbed.git
