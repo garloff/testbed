@@ -41,7 +41,7 @@ The following stable releases are supported. The development branch usually work
 ## Test status of cloud providers
 
 * [Betacloud](https://www.betacloud.de): Works
-* [Citycloud](https://www.citycloud.com): Works (need to change disk names from sdX to vdX, pass ``drives_vdx: true`` in environment). You can use ``environment-CityCloud.yml`` to get a set of working parameters.
+* [Citycloud](https://www.citycloud.com): Works
 * [OTC](https://open-telekom-cloud.com/): Needs ``enable_snat``, ``enable_dhcp``, ``dns_nameservers``, fixup NIC names via custom runcmd commands and an older heatversion. It also needs two cloud-init patches to get get userdata.
 * [teuto.stack](https://teutostack.de/): Currently lacks support for heat.
 
@@ -294,10 +294,6 @@ The defaults for the stack parameters are intended for the Betacloud.
     <td><code>openstack_version</code></td>
     <td><code>rocky</code></td>
   </tr>
-  <tr>
-    <td><code>drives_vdx</code></td>
-    <td><code>false</code></td>
-  </tr>
 </table>
 
 With the file ``environment.yml`` the parameters of the stack can be adjusted.
@@ -315,7 +311,6 @@ parameters:
   volume_size_storage: 10
   ceph_version: luminous
   openstack_version: rocky
-  drives_vdx: false
 ```
 
 ## Initialization
@@ -450,10 +445,6 @@ The ``--timeout 9000`` parameter avoids heat giving up too early.
 (The default timeout for heat stacks is typically 3600.)
 
 This can also be achieved using ``make deploy-openstack``.
-
-The parameter ``--parameter drives_vdx=true`` can be passed (or ``drives_vdx: true`` be set
-in ``environment.yml``) to change the testbed to use virtio disk names (``vdx``) rather than
-SCSI disk names (``sdx``).
 
 The parameters ``ceph_version`` and ``openstack_version`` change the deployed versions of
 Ceph and OpenStack respectively from their defaults ``luminous`` and ``rocky``.

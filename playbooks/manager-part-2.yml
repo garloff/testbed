@@ -1,4 +1,32 @@
 ---
+- name: Copy custom facts
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Create custom facts directory
+      file:
+        path: /etc/ansible/facts.d
+        state: "directory"
+        owner: root
+        group: root
+        mode: 0755
+      become: true
+
+    - name: Copy fact files
+      copy:
+        src: "/opt/configuration/environments/custom/files/{{ item }}.fact"
+        dest: "/etc/ansible/facts.d/{{ item }}.fact"
+        owner: root
+        group: root
+        mode: 0755
+      become: true
+      with_items:
+        - testbed_ceph_devices
+        - testbed_ceph_devices_all
+        - testbed_network_devices.fact
+
 - name: Apply role osism.manager
   hosts: localhost
   connection: local
