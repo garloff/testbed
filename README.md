@@ -41,9 +41,9 @@ The following stable releases are supported. The development branch usually work
 ## Test status of cloud providers
 
 * [Betacloud](https://www.betacloud.de): Works
-* [Citycloud](https://www.citycloud.com): Works (need to change disk names from sdX to vdX, so pass ``--parameter drives_vdx=true``).
+* [Citycloud](https://www.citycloud.com): Works (need to change disk names from sdX to vdX, pass ``drives_vdx: true`` in environment)
 * [OTC](https://open-telekom-cloud.com/): Needs ``enable_snat``, ``enable_dhcp``, ``dns_nameservers`` and older heat version, ``volume_az`` set to the same as ``availability_zone``, ``drives_vdx: true``, renaming of NICs from ``enp4sX`` to ``ensX`` (followed by ``ifup -a``). All of these changes are included in the ``OTC`` branch of testbed. In addition, a customer Ubuntu 18.04 is needed, registered with a larger ``min_disk`` (use 30G or more) and two patches to cloud-init to prefer ens3 over enp4sX (to retrieve meta-data via the network) and to accept text/x-shellscript as mimetype for the cloud-config part of the user-data.
-* [teuto.stack](https://teutostack.de/): Currently lacks support for heat
+* [teuto.stack](https://teutostack.de/): Currently lacks support for heat.
 
 ## Requirements
 
@@ -151,6 +151,12 @@ jinja2 -o stack.yml -D number_of_volumes=4 templates/stack.yml.j2
 
 The configuration is only tested with 3 volumes. With more or less volumes, the configuration must
 be adjusted manually and problems may occur.
+
+Using the included Makefile and calling
+```
+make
+```
+will recreate ```stack.yml``` and ```stack-single.yml``` using default parameters (3 nodes, 3 volumes each).
 
 ## Network topology
 
@@ -281,13 +287,16 @@ The defaults for the stack parameters are intended for the Betacloud.
     <td><code>volume_size_storage</code></td>
     <td><code>10</code></td>
   </tr>
-  <tr>
     <td><code>ceph_version</code></td>
     <td><code>luminous</code></td>
   </tr>
   <tr>
     <td><code>openstack_version</code></td>
     <td><code>rocky</code></td>
+  </tr>
+  <tr>
+    <td><code>drives_vdx</code></td>
+    <td><code>false</code></td>
   </tr>
 </table>
 
@@ -306,6 +315,7 @@ parameters:
   volume_size_storage: 10
   ceph_version: luminous
   openstack_version: rocky
+  drives_vdx: false
 ```
 
 ## Initialization
@@ -348,7 +358,9 @@ openstack --os-cloud testbed \
 +---------------------+--------------------------------------+
 ```
 
-This can also be achieved using ``make create``.
+This can also be achieved using ``make create``. (If you are using a cloud name different from
+``testbed`` and you have not done an export OS_CLOUD, you can override the default by passing
+``make create OS_CLOUD=yourcloudname``.)
 
 Docker etc. are already installed during stack creation. Therefore the creation takes some time.
 You can use ``make watch`` to watch the installation proceeding.
@@ -403,6 +415,8 @@ openstack --os-cloud testbed \
   -t stack.yml testbed
 ```
 
+This can also be achieved using ``make deploy-infra``.
+
 The deployment of Ceph can be enabled via parameter ``deploy_ceph``.
 
 Without the deployment of Ceph the deployment of OpenStack is not possible.
@@ -428,6 +442,7 @@ openstack --os-cloud testbed \
   --parameter deploy_ceph=true \
   --parameter deploy_infrastructure=true \
   --parameter deploy_openstack=true \
+  --timeout 9000 \
   -t stack.yml testbed
 ```
 
@@ -463,6 +478,8 @@ It should be noted that the defaults are tested best.
   chmod 0600 id_rsa.testbed
   ```
 
+  Both steps can be done using ``make ~/.ssh/id_rsa.testbed``.
+
 * Get the manager's address
 
   ```
@@ -485,6 +502,9 @@ It should be noted that the defaults are tested best.
     -f value \
     testbed manager_address)
   ```
+
+  ``make .MANAGER_ADDRESS.testbed`` outputs the IP address and creates a
+  sourcable file ``.MANAGER_ADDRESS.testbed``.
 
 * Access the manager
 
