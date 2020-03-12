@@ -41,9 +41,9 @@ The following stable releases are supported. The development branch usually work
 ## Test status of cloud providers
 
 * [Betacloud](https://www.betacloud.de): Works
-* [Citycloud](https://www.citycloud.com): Works (need to change disk names from sdX to vdX before deploying Ceph on manager node ``/opt/configuration/inventory/host_vars/testbed-node-?.osism.local.yml``)
-* [OTC](https://open-telekom-cloud.com/): Needs ``enable_snat``, ``enable_dhcp`` and older heat, still fails
-* [teuto.stack](https://teutostack.de/): Currently lacks support for heat
+* [Citycloud](https://www.citycloud.com): Works (need to change disk names from sdX to vdX, pass ``drives_vdx: true`` in environment). You can use ``environment-CityCloud.yml`` to get a set of working parameters.
+* [OTC](https://open-telekom-cloud.com/): Needs ``enable_snat``, ``enable_dhcp``, ``dns_nameservers``, fixup NIC names via custom runcmd commands and an older heatversion. It also needs two cloud-init patches to get get userdata.
+* [teuto.stack](https://teutostack.de/): Currently lacks support for heat.
 
 ## Requirements
 
@@ -151,6 +151,12 @@ jinja2 -o stack.yml -D number_of_volumes=4 templates/stack.yml.j2
 
 The configuration is only tested with 3 volumes. With more or less volumes, the configuration must
 be adjusted manually and problems may occur.
+
+Using the included Makefile and calling
+```
+make
+```
+will recreate ```stack.yml``` and ```stack-single.yml``` using default parameters (3 nodes, 3 volumes each).
 
 ## Network topology
 
@@ -281,13 +287,16 @@ The defaults for the stack parameters are intended for the Betacloud.
     <td><code>volume_size_storage</code></td>
     <td><code>10</code></td>
   </tr>
-  <tr>
     <td><code>ceph_version</code></td>
     <td><code>luminous</code></td>
   </tr>
   <tr>
     <td><code>openstack_version</code></td>
     <td><code>rocky</code></td>
+  </tr>
+  <tr>
+    <td><code>drives_vdx</code></td>
+    <td><code>false</code></td>
   </tr>
 </table>
 
@@ -306,6 +315,7 @@ parameters:
   volume_size_storage: 10
   ceph_version: luminous
   openstack_version: rocky
+  drives_vdx: false
 ```
 
 ## Initialization
@@ -323,7 +333,8 @@ openstack --os-cloud testbed \
   -t stack.yml testbed
 ```
 
-If the check is successful, the stack can be created.
+If the check is successful, the stack can be created. ``make dry-run`` will do this 
+invocation for you.
 
 Note that you can set the ``export OS_CLOUD=testbed`` environment variable to avoid typing
 ``--os-cloud testbed`` repeatedly.
@@ -347,7 +358,12 @@ openstack --os-cloud testbed \
 +---------------------+--------------------------------------+
 ```
 
+This can also be achieved using ``make create``. (If you are using a cloud name different from
+``testbed`` and you have not done an export OS_CLOUD, you can override the default by passing
+``make create OS_CLOUD=yourcloudname``.)
+
 Docker etc. are already installed during stack creation. Therefore the creation takes some time.
+You can use ``make watch`` to watch the installation proceeding.
 
 The manager is started after the deployment of the HCI nodes has been completed. This is necessary to
 be able to carry out various preparatory steps after the manager has been made available.
@@ -380,6 +396,9 @@ openstack --os-cloud testbed \
 Are you sure you want to delete this stack(s) [y/N]? y
 ```
 
+This can also be achieved using ``make clean`` or ``make clean-wait`` if you prefer watching
+the cleanup process.
+
 ### Customisation
 
 By default, no services are deployed when the stack is created. This is customizable.
@@ -396,6 +415,8 @@ openstack --os-cloud testbed \
   -t stack.yml testbed
 ```
 
+This can also be achieved using ``make deploy-infra``.
+
 The deployment of Ceph can be enabled via parameter ``deploy_ceph``.
 
 Without the deployment of Ceph the deployment of OpenStack is not possible.
@@ -408,6 +429,8 @@ openstack --os-cloud testbed \
   -t stack.yml testbed
 ```
 
+This can also be achieved using ``make deploy-ceph``.
+
 The deployment of OpenStack can be enabled via parameter ``deploy_openstack``.
 
 The deployment of OpenStack depends on the deployment of Ceph and the infrastructure services.
@@ -419,8 +442,18 @@ openstack --os-cloud testbed \
   --parameter deploy_ceph=true \
   --parameter deploy_infrastructure=true \
   --parameter deploy_openstack=true \
+  --timeout 9000 \
   -t stack.yml testbed
 ```
+
+The ``--timeout 9000`` parameter avoids heat giving up too early.
+(The default timeout for heat stacks is typically 3600.)
+
+This can also be achieved using ``make deploy-openstack``.
+
+The parameter ``--parameter drives_vdx=true`` can be passed (or ``drives_vdx: true`` be set
+in ``environment.yml``) to change the testbed to use virtio disk names (``vdx``) rather than
+SCSI disk names (``sdx``).
 
 The parameters ``ceph_version`` and ``openstack_version`` change the deployed versions of
 Ceph and OpenStack respectively from their defaults ``luminous`` and ``rocky``.
@@ -445,6 +478,8 @@ It should be noted that the defaults are tested best.
   chmod 0600 id_rsa.testbed
   ```
 
+  Both steps can be done using ``make ~/.ssh/id_rsa.testbed``.
+
 * Get the manager's address
 
   ```
@@ -468,11 +503,16 @@ It should be noted that the defaults are tested best.
     testbed manager_address)
   ```
 
+  ``make .MANAGER_ADDRESS.testbed`` outputs the IP address and creates a
+  sourcable file ``.MANAGER_ADDRESS.testbed``.
+
 * Access the manager
 
   ```
   ssh -i id_rsa.testbed dragon@$MANAGER_ADDRESS
   ```
+
+  There is a shortcut ``make ssh`` available.
 
 * Use sshuttle (https://github.com/sshuttle/sshuttle) to access the individual
   services locally
