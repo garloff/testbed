@@ -63,10 +63,6 @@ parameters:
     type: string
     default: rocky
 
-  drives_vdx:
-    type: boolean
-    default: false
-
 ##########
 resources:
 
@@ -126,7 +122,6 @@ resources:
                   deploy_openstack: {get_param: deploy_openstack}
                   ceph_version: {get_param: ceph_version}
                   openstack_version: {get_param: openstack_version}
-                  drives_vdx: {get_param: drives_vdx}
                   wc_notify: {get_attr: ['manager_wait_handle', 'curl_cli']}
                 template: |
                   #!/usr/bin/env bash
@@ -173,6 +168,7 @@ resources:
                   # NOTE(berendt): sudo -E does not work here because sudo -i is needed
 
                   sudo -iu dragon sh -c 'INTERACTIVE=false osism-run custom cronjobs'
+                  sudo -iu dragon sh -c 'INTERACTIVE=false osism-run custom facts'
 
                   # prepare all systems
                   if [[ {{ number_of_nodes|default(3)|int }} -gt 0 ]]; then
@@ -192,11 +188,6 @@ resources:
                       # deploy helper services
                       sudo -iu dragon sh -c 'INTERACTIVE=false osism-infrastructure helper --tags sshconfig'
                       sudo -iu dragon sh -c 'INTERACTIVE=false osism-run custom generate-ssh-known-hosts'
-
-                      # Fixup drive names sdX -> vdX IF drives_vdx is set (TODO: Could autodetect this)
-                      if [[ "drives_vdx" == "True" ]]; then
-                        sudo -iu dragon sh -c 'for file in /opt/configuration/inventory/host_vars/testbed*.yml; do sed -i "s@/dev/sd\([a-z]\)@/dev/vd\1@g" ${file}; done'
-                      fi
                   fi
 
                   if [[ "deploy_infrastructure" == "True" ]]; then
@@ -250,9 +241,8 @@ resources:
           - "mv /etc/netplan/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml.unused"
           - "mkdir -p /etc/network/interfaces.d"
           - "echo 'auto lo\niface lo inet loopback\n\nsource /etc/network/interfaces.d/*' > /etc/network/interfaces"
-          - "for iface in $(ip -o link | cut -d: -f2 | tr -d ' ' | grep ^enp4s); do NM=ens${iface#enp4s}; ip link set dev ${iface} name $NM; done # OTC hack"
-          - "for iface in $(ip -o link | cut -d: -f2 | tr -d ' ' | grep ^ens); do echo 'auto '${iface}'\niface '${iface}' inet dhcp\n' > /etc/network/interfaces.d/device-$iface; done"
-          - "for iface in $(ip -o link | cut -d: -f2 | tr -d ' ' | grep ^ens | grep -v ens3); do echo '\n\npost-up ip route del default dev '${iface}' || exit 0\n' >> /etc/network/interfaces.d/device-$iface; done"
+          - "for iface in $(find /sys/class/net -type l -not -lname '*virtual*' -printf '%f\n'); do echo 'auto '${iface}'\niface '${iface}' inet dhcp\n' > '/etc/network/interfaces.d/device-'$iface; done"
+          - "primary=$(ip route get 8.8.8.8 | grep via | awk '{print $5}'); for iface in $(find /sys/class/net -type l -not -lname '*virtual*' -printf '%f\n' | grep -v $primary); do echo '\n\npost-up ip route del default dev '${iface} || exit 0'\n' >> '/etc/network/interfaces.d/device-'$iface; done"
           - "sed -i '/Type=/iStartLimitBurst=12' /lib/systemd/system/systemd-resolved.service"
           - "systemctl daemon-reload"
           - "systemctl restart systemd-networkd"
@@ -308,11 +298,10 @@ resources:
           - "echo 'network: {config: disabled}' > /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg"
           - "rm -f /etc/network/interfaces.d/50-cloud-init.cfg"
           - "mv /etc/netplan/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml.unused"
-          - "echo 'auto lo\niface lo inet loopback\n\nsource /etc/network/interfaces.d/*' > /etc/network/interfaces"
-          - "for iface in $(ip -o link | cut -d: -f2 | tr -d ' ' | grep ^enp4s); do NM=ens${iface#enp4s}; ip link set dev ${iface} name $NM; done # OTC hack"
           - "mkdir -p /etc/network/interfaces.d"
-          - "for iface in $(ip -o link | cut -d: -f2 | tr -d ' ' | grep ^ens); do echo 'auto '${iface}'\niface '${iface}' inet dhcp\n' > /etc/network/interfaces.d/device-$iface; done"
-          - "for iface in $(ip -o link | cut -d: -f2 | tr -d ' ' | grep ^ens | grep -v ens3); do echo '\n\npost-up ip route del default dev '${iface}' || exit 0\n' >> /etc/network/interfaces.d/device-$iface; done"
+          - "echo 'auto lo\niface lo inet loopback\n\nsource /etc/network/interfaces.d/*' > /etc/network/interfaces"
+          - "for iface in $(find /sys/class/net -type l -not -lname '*virtual*' -printf '%f\n'); do echo 'auto '${iface}'\niface '${iface}' inet dhcp\n' > '/etc/network/interfaces.d/device-'$iface; done"
+          - "primary=$(ip route get 8.8.8.8 | grep via | awk '{print $5}'); for iface in $(find /sys/class/net -type l -not -lname '*virtual*' -printf '%f\n' | grep -v $primary); do echo '\n\npost-up ip route del default dev '${iface} || exit 0'\n' >> '/etc/network/interfaces.d/device-'$iface; done"
           - "sed -i '/Type=/iStartLimitBurst=12' /lib/systemd/system/systemd-resolved.service"
           - "systemctl daemon-reload"
           - "systemctl restart systemd-networkd"

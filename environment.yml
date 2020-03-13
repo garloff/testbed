@@ -9,6 +9,5 @@ parameter_defaults:
   #image: Standard_Ubuntu_18.04_latest
   public: admin_external_net
   volume_size_storage: 12
-  drives_vdx: true
   ceph_version: nautilus
   openstack_version: train
