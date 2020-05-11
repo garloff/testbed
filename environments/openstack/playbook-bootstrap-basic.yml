@@ -1,4 +1,30 @@
 ---
+- name: Prepare masquerading on the manager node
+  hosts: testbed-manager
+
+  tasks:
+    - name: Accpet FORWARD on the management interface (incoming)
+      iptables:
+        chain: FORWARD
+        in_interface: "{{ ansible_local.testbed_network_devices.management }}"
+        jump: ACCEPT
+      become: yes
+
+    - name: Accept FORWARD on the management interface (outgoing)
+      iptables:
+        chain: FORWARD
+        out_interface: "{{ ansible_local.testbed_network_devices.management }}"
+        jump: ACCEPT
+      become: yes
+
+    - name: Masquerade traffic on the management interface
+      iptables:
+        table: nat
+        chain: POSTROUTING
+        out_interface: "{{ ansible_local.testbed_network_devices.management }}"
+        jump: MASQUERADE
+      become: yes
+
 - name: Bootstrap basic OpenStack services
   hosts: localhost
   connection: local
@@ -22,7 +48,14 @@
         default_project: test
       no_log: true
 
-    - name: Add role member to user test
+    # NOTE: this role is required by octavia
+    - name: Create load-balancer_member role
+      os_keystone_role:
+        cloud: admin
+        state: present
+        name: load-balancer_member
+
+    - name: Add member roles to user test
       os_user_role:
         cloud: admin
         state: present
@@ -30,6 +63,7 @@
         role: "{{ item }}"
         project: test
       with_items:
+        - load-balancer_member
         - member
         - _member_
 
@@ -68,23 +102,6 @@
     - name: Make cirros image visible
       command: openstack --os-cloud admin image set --public cirros
 
-    # NOTE: we prepare the stuff for Octavia already here to be able
-    #       to use it when deploying Octavia
-
-    - name: Create octavia flavor
-      os_nova_flavor:
-        cloud: admin
-        state: present
-        name: octavia
-        flavorid: octavia
-        ram: 1024
-        vcpus: 1
-        disk: 2
-        ephemeral: 0
-        is_public: false
-        extra_specs:
-          "hw_rng:allowed": "True"
-
     - name: Create public network
       os_network:
         cloud: admin
@@ -104,6 +121,7 @@
         enable_dhcp: false
         allocation_pool_start: 192.168.100.100
         allocation_pool_end: 192.168.100.200
+        gateway_ip: 192.168.100.5
 
     - name: Create test network
       os_network:
@@ -157,6 +175,13 @@
         security_group: icmp
         protocol: icmp
         remote_ip_prefix: 0.0.0.0/0
+
+    - name: Create test keypair
+      os_keypair:
+        cloud: test
+        state: present
+        name: test
+        public_key_file: /opt/configuration/environments/openstack/id_rsa.test.pub
 
     - name: Create test instance
       os_server:

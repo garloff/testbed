@@ -25,7 +25,8 @@ testbed-node-1.osism.local
 [netdata:children]
 testbed-all
 
-[cobbler]
+[cobbler:children]
+testbed-manager
 
 [helper:children]
 testbed-manager
@@ -33,7 +34,8 @@ testbed-manager
 [manager:children]
 testbed-manager
 
-[mirror]
+[mirror:children]
+testbed-manager
 
 [openstackclient:children]
 testbed-manager
@@ -57,6 +59,9 @@ testbed-nodes
 [cephclient:children]
 testbed-manager
 
+[ceph-grafana-server:children]
+ceph-control
+
 [ceph-mds:children]
 ceph-control
 
@@ -69,6 +74,9 @@ ceph-control
 [ceph-osd:children]
 testbed-nodes
 
+[ceph-rgw:children]
+testbed-nodes
+
 # NOTE: Use the following groups only if these services are deployed.
 
 [ceph-iscsigw]
@@ -79,11 +87,12 @@ testbed-nodes
 
 [ceph-rbdmirror]
 
-[ceph-rgw]
-
 # NOTE: Subsequent groups necessary for compatibility to ceph-ansible. Don't change it.
 
 [ceph-client]
+
+[grafana-server:children]
+ceph-grafana-server
 
 [iscsi-gws:children]
 ceph-iscsigw
@@ -141,8 +150,14 @@ testbed-nodes
 [storage:children]
 testbed-nodes
 
+[monitoring:children]
+testbed-manager
+
 [grafana:children]
-control
+monitoring
+
+[influxdb:children]
+monitoring
 
 [kibana:children]
 control
@@ -311,6 +326,9 @@ network
 
 [neutron-metadata-agent:children]
 network
+
+[neutron-ovn-metadata-agent:children]
+compute
 
 [neutron-vpnaas-agent:children]
 network
@@ -566,3 +584,27 @@ designate
 
 [elasticsearch-curator:children]
 elasticsearch
+
+# ovn
+
+[ovn-controller:children]
+ovn-controller-compute
+ovn-controller-network
+
+[ovn-controller-compute:children]
+compute
+
+[ovn-controller-network:children]
+network
+
+[ovn-database:children]
+control
+
+[ovn-northd:children]
+ovn-database
+
+[ovn-nb-db:children]
+ovn-database
+
+[ovn-sb-db:children]
+ovn-database
