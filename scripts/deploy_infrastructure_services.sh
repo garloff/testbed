@@ -3,8 +3,7 @@
 export INTERACTIVE=false
 
 osism-infrastructure helper --tags phpmyadmin
-osism-infrastructure helper --tags openstackclient
-osism-infrastructure netdata
+osism-infrastructure openstackclient
 osism-generic cockpit
 
-osism-kolla deploy --tags infrastructure
+osism-kolla deploy testbed --tags infrastructure

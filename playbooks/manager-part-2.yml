@@ -1,15 +1,24 @@
 ---
-- name: Apply role osism.manager
-  hosts: localhost
+- name: Apply role osism.docker
+  hosts: testbed-manager.osism.local
   connection: local
   gather_facts: true
 
-  vars_files:
-    - /opt/configuration/inventory/host_vars/testbed-manager.osism.local.yml
-    - /opt/configuration/environments/manager/configuration.yml
-    - /opt/configuration/environments/manager/images.yml
-    - /opt/configuration/environments/manager/secrets.yml
-    - /opt/configuration/environments/secrets.yml
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    docker_configure_repository: no
+    docker_configure_storage_driver: yes
+    docker_storage_driver: overlay2
+    docker_user: dragon
+    docker_version: "5:19.03.5"
 
   roles:
-    - ansible-manager
+    - ansible-docker
+
+- name: Apply role osism.docker-compose
+  hosts: testbed-manager.osism.local
+  connection: local
+  gather_facts: true
+
+  roles:
+    - ansible-docker-compose

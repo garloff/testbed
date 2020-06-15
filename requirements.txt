@@ -1,5 +1,5 @@
-diskimage-builder
 Jinja2
 PyYAML
+jinja2-cli
 python-gilt
 requests
