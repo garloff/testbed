@@ -1,5 +1,6 @@
 ---
-heat_template_version: 2018-08-31
+heat_template_version: 2016-10-14
+#heat_template_version: 2018-08-31
 
 ###########
 parameters:
@@ -420,9 +421,9 @@ resources:
     type: OS::Neutron::Net
     properties:
       name: testbed-management
-      value_specs:
-        availability_zone_hints:
-          - {get_param: network_availability_zone}
+      #value_specs:
+      #  availability_zone_hints:
+      #    - {get_param: network_availability_zone}
 
   subnet_management:
     type: OS::Neutron::Subnet
@@ -438,9 +439,9 @@ resources:
     type: OS::Neutron::Net
     properties:
       name: testbed-internal
-      value_specs:
-        availability_zone_hints:
-          - {get_param: network_availability_zone}
+      #value_specs:
+      #  availability_zone_hints:
+      #    - {get_param: network_availability_zone}
 
   subnet_internal:
     type: OS::Neutron::Subnet
@@ -448,7 +449,7 @@ resources:
       network: {get_resource: net_internal}
       cidr: 192.168.50.0/24
       gateway_ip: null
-      enable_dhcp: false
+      #enable_dhcp: false
       allocation_pools:
         -
           start: 192.168.50.100
@@ -458,9 +459,9 @@ resources:
     type: OS::Neutron::Net
     properties:
       name: testbed-provider
-      value_specs:
-        availability_zone_hints:
-          - {get_param: network_availability_zone}
+      #value_specs:
+      #  availability_zone_hints:
+      #    - {get_param: network_availability_zone}
 
   subnet_provider:
     type: OS::Neutron::Subnet
@@ -468,7 +469,7 @@ resources:
       network: {get_resource: net_provider}
       cidr: 192.168.100.0/24
       gateway_ip: null
-      enable_dhcp: false
+      #enable_dhcp: false
       allocation_pools:
         -
           start: 192.168.100.100
@@ -478,9 +479,9 @@ resources:
     type: OS::Neutron::Net
     properties:
       name: testbed-external
-      value_specs:
-        availability_zone_hints:
-          - {get_param: network_availability_zone}
+      #value_specs:
+      #  availability_zone_hints:
+      #    - {get_param: network_availability_zone}
 
   subnet_external:
     type: OS::Neutron::Subnet
@@ -488,7 +489,7 @@ resources:
       network: {get_resource: net_external}
       cidr: 192.168.90.0/24
       gateway_ip: null
-      enable_dhcp: false
+      #enable_dhcp: false
       allocation_pools:
         -
           start: 192.168.90.100
@@ -512,9 +513,9 @@ resources:
     type: OS::Neutron::Net
     properties:
       name: testbed-storage-frontend
-      value_specs:
-        availability_zone_hints:
-          - {get_param: network_availability_zone}
+      #value_specs:
+      #  availability_zone_hints:
+      #    - {get_param: network_availability_zone}
 
   subnet_storage_frontend:
     type: OS::Neutron::Subnet
@@ -522,7 +523,7 @@ resources:
       network: {get_resource: net_storage_frontend}
       cidr: 192.168.70.0/24
       gateway_ip: null
-      enable_dhcp: false
+      #enable_dhcp: false
       allocation_pools:
         -
           start: 192.168.70.100
@@ -532,9 +533,9 @@ resources:
     type: OS::Neutron::Net
     properties:
       name: testbed-storage-backend
-      value_specs:
-        availability_zone_hints:
-          - {get_param: network_availability_zone}
+      #value_specs:
+      #  availability_zone_hints:
+      #    - {get_param: network_availability_zone}
 
   subnet_storage_backend:
     type: OS::Neutron::Subnet
@@ -542,7 +543,7 @@ resources:
       network: {get_resource: net_storage_backend}
       cidr: 192.168.80.0/24
       gateway_ip: null
-      enable_dhcp: false
+      #enable_dhcp: false
       allocation_pools:
         -
           start: 192.168.80.100
@@ -557,9 +558,10 @@ resources:
     properties:
       external_gateway_info:
         network: {get_param: public}
-      value_specs:
-        availability_zone_hints:
-          - {get_param: network_availability_zone}
+        enable_snat: true
+      #value_specs:
+      #  availability_zone_hints:
+      #    - {get_param: network_availability_zone}
 
   router_interface:
     type: OS::Neutron::RouterInterface
