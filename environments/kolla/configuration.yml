@@ -11,7 +11,7 @@ ansible_become_user: root
 docker_registry: quay.io
 kolla_base_distro: ubuntu
 kolla_install_type: source
-openstack_release: rocky
+openstack_release: train
 
 ##########################################################
 # kolla
@@ -53,17 +53,21 @@ enable_barbican: "yes"
 enable_ceilometer: "yes"
 enable_cinder: "yes"
 enable_cinder_backup: "yes"
-enable_cloudkitty: "no"
+enable_cloudkitty: "yes"
 enable_designate: "yes"
 enable_gnocchi: "yes"
 enable_heat: "yes"
+enable_kuryr: "yes"
 enable_magnum: "yes"
-enable_ocatvia: "no"
+enable_manila: "yes"
+enable_octavia: "yes"
 enable_panko: "yes"
 enable_watcher: "no"
+enable_zun: "yes"
 
 enable_etcd: "yes"
 enable_grafana: "yes"
+enable_prometheus: "yes"
 enable_redis: "yes"
 enable_skydive: "yes"
 
@@ -77,7 +81,7 @@ openstack_logging_debug: "False"
 openstack_service_workers: 5
 
 # profiling
-enable_osprofiler: "no"
+enable_osprofiler: "yes"
 
 # logging
 enable_central_logging: "yes"
@@ -86,13 +90,13 @@ enable_central_logging: "yes"
 
 es_heap_size: "1g"
 
-# rabbitmq
-
-rabbitmq_cluster_version: 1
-
 # mariadb
 
 enable_mariabackup: "yes"
+
+# rabbitmq
+
+rabbitmq_server_additional_erl_args: "+S 1:1"
 
 # horizon
 horizon_backend_database: "yes"
@@ -115,9 +119,9 @@ nova_console: novnc
 # octavia
 octavia_loadbalancer_topology: "ACTIVE_STANDBY"
 
-# octavia_amp_boot_network_list: FIXME
-# octavia_amp_secgroup_list: FIXME
-# octavia_amp_flavor_id: FIXME
+octavia_amp_boot_network_list: OCTAVIA_MGMT_NETWORK_ID
+octavia_amp_secgroup_list: OCTAVIA_MGMT_SECURITY_GROUP_ID
+octavia_amp_flavor_id: OCTAVIA_FLAVOR_ID
 
 # ceilometer
 ceilometer_database_type: gnocchi
@@ -125,6 +129,12 @@ ceilometer_event_type: panko
 
 # designate
 designate_ns_record: openstack.osism.local
+
+# magnum
+enable_cluster_user_trust: "yes"
+
+# manila
+enable_manila_backend_generic: "yes"
 
 ##########################################################
 # external ceph
@@ -136,10 +146,9 @@ glance_backend_ceph: "yes"
 gnocchi_backend_storage: "ceph"
 nova_backend_ceph: "yes"
 
-cinder_backup_driver: "ceph"
-
 ceph_gnocchi_pool_name: "metrics"
-
+ceph_nova_keyring: ceph.client.nova.keyring
+cinder_backup_driver: "ceph"
 glance_backend_file: "no"
 
 # NOTE: public_network from environments/ceph/configuration.yml

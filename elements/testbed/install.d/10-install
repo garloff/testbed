@@ -1,7 +1,0 @@
-#!/bin/bash
-
-set -eu
-set -o pipefail
-
-add-apt-repository --yes ppa:ansible/ansible
-apt-get install --yes ansible

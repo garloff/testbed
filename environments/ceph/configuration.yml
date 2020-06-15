@@ -4,11 +4,16 @@
 
 containerized_deployment: true
 
+generate_fsid: false
+fsid: ce766f84-6dde-4ba0-9c57-ddb62431f1cd
+
+##########################
+# osd
+
 osd_objectstore: bluestore
 osd_scenario: lvm
 
-generate_fsid: false
-fsid: ce766f84-6dde-4ba0-9c57-ddb62431f1cd
+dmcrypt: true
 
 ##########################
 # network
@@ -19,9 +24,37 @@ cluster_network: 192.168.80.0/24
 ##########################
 # pools & keys
 
-cephfs_pool_default_size: 1
+# NOTE: default size of 2 because by default there are only 2 nodes
+rgw_pool_default_size: 2
+rgw_pool_default_pg_num: 8
+
+rgw_zone: default
+rgw_create_pools:
+  "{{ rgw_zone }}.rgw.buckets.data":
+    pg_num: "{{ rgw_pool_default_pg_num }}"
+    size: "{{ rgw_pool_default_size }}"
+    type: replicated
+  "{{ rgw_zone }}.rgw.buckets.index":
+    pg_num: "{{ rgw_pool_default_pg_num }}"
+    size: "{{ rgw_pool_default_size }}"
+    type: replicated
+  "{{ rgw_zone }}.rgw.meta":
+    pg_num: "{{ rgw_pool_default_pg_num }}"
+    size: "{{ rgw_pool_default_size }}"
+    type: replicated
+  "{{ rgw_zone }}.rgw.log":
+    pg_num: "{{ rgw_pool_default_pg_num }}"
+    size: "{{ rgw_pool_default_size }}"
+    type: replicated
+  "{{ rgw_zone }}.rgw.control":
+    pg_num: "{{ rgw_pool_default_pg_num }}"
+    size: "{{ rgw_pool_default_size }}"
+    type: replicated
+
+# NOTE: default size of 2 because by default there are only 2 nodes
+cephfs_pool_default_size: 2
 cephfs_pool_default_min_size: 0
-cephfs_pool_default_pg_num: 64
+cephfs_pool_default_pg_num: 16
 
 cephfs_data_pool:
   name: "cephfs_data"
@@ -55,7 +88,8 @@ cephfs_pools:
 #       set to false. It must only be set to true again when new pools or keys are added.
 openstack_config: true
 
-openstack_pool_default_size: 1
+# NOTE: default size of 2 because by default there are only 2 nodes
+openstack_pool_default_size: 2
 openstack_pool_default_min_size: 0
 openstack_pool_default_pg_num: 64
 
@@ -168,11 +202,35 @@ ceph_mgr_modules:
   - status
 
 ##########################
+# rgw
+
+radosgw_frontend_port: 8081
+
+##########################
 # custom
 
 ceph_conf_overrides:
+  global:
+    # NOTE: default size of 2 because by default there are only 2 nodes
+    osd pool default size: 2
+    osd pool default min size: 0
+
   mon:
     mon allow pool delete: true
-  osd:
-    # NOTE: default size of 2 because by default there are only 2 volumes per node
-    osd pool default size: 2
+
+  "client.rgw.{{ hostvars[inventory_hostname]['ansible_hostname'] }}.rgw0":
+    "rgw content length compat": "true"
+    "rgw enable apis": "swift, s3"
+    "rgw keystone accepted roles": "Member, _member_, admin"
+    "rgw keystone admin domain": "default"
+    "rgw keystone admin password": "hF6NWPG4rWTpK00oANEcRAiKbwbEcKFHHYYskar2"
+    "rgw keystone admin project": "service"
+    "rgw keystone admin tenant": "service"
+    "rgw keystone admin user":  "swift"
+    "rgw keystone api version": "3"
+    "rgw keystone revocation interval": "900"
+    "rgw keystone url": "http://api-int.osism.local:35357"
+    "rgw keystone_implicit_tenants": "true"
+    "rgw s3 auth use keystone": "true"
+    "rgw swift account in url":  "true"
+    "rgw swift versioning enabled": "true"
