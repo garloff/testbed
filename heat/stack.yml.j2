@@ -264,7 +264,7 @@ resources:
           - "echo 'network: {config: disabled}' > /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg"
           - "rm -f /etc/network/interfaces.d/50-cloud-init.cfg"
           - "mv /etc/netplan/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml.unused"
-          - # Begin OTC hack
+          - "echo Begin OTC hack"
           - "mkdir -p /etc/network/interfaces.d"
           - "echo 'auto lo\niface lo inet loopback\n\nsource /etc/network/interfaces.d/*' > /etc/network/interfaces"
           - "for iface in $(find /sys/class/net -type l -not -lname '*virtual*' -printf '%f\n'); do echo 'auto '${iface}'\niface '${iface}' inet dhcp\n' > '/etc/network/interfaces.d/device-'$iface; done"
@@ -273,7 +273,7 @@ resources:
           - "systemctl daemon-reload"
           - "systemctl restart systemd-networkd"
           - "ifup -a"
-          - # End OTC hack
+          - "echo End OTC hack"
           - "/root/run.sh"
         final_message: "The system is finally up, after $UPTIME seconds"
         power_state:
@@ -331,7 +331,7 @@ resources:
           - "echo 'network: {config: disabled}' > /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg"
           - "rm -f /etc/network/interfaces.d/50-cloud-init.cfg"
           - "mv /etc/netplan/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml.unused"
-          - # Begin OTC hack
+          - "echo Begin OTC hack"
           - "mkdir -p /etc/network/interfaces.d"
           - "echo 'auto lo\niface lo inet loopback\n\nsource /etc/network/interfaces.d/*' > /etc/network/interfaces"
           - "for iface in $(find /sys/class/net -type l -not -lname '*virtual*' -printf '%f\n'); do echo 'auto '${iface}'\niface '${iface}' inet dhcp\n' > '/etc/network/interfaces.d/device-'$iface; done"
@@ -340,7 +340,7 @@ resources:
           - "systemctl daemon-reload"
           - "systemctl restart systemd-networkd"
           - "ifup -a"
-          - # End OTC hack
+          - "echo End OTC hack"
           - "/root/run.sh"
         final_message: "The system is finally up, after $UPTIME seconds"
 {% endif %}
