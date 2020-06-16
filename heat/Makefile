@@ -93,16 +93,19 @@ watch: .deploy.$(STACKNAME)
 	if test "$$COLORTERM" = "1"; then \
 	  GREEN=$$(echo -e "\e[0;32m"); GREENBOLD=$$(echo -e "\e[1;32m"); BOLD=$$(echo -e "\e[0;1m"); RED=$$(echo -e "\e[0;31m"); YELLOW=$$(echo -e "\e[0;33m"); NORM=$$(echo -e "\e[0;0m"); \
 	fi; \
-	MGR_ADR=""; STAT=""; while true; do\
-		date; $(OPENSTACK) stack list; \
-		SRV=$$($(OPENSTACK) server list -f value -c "Name" -c "Status" | grep $(STACKNAME)-manager | cut -d ' ' -f2); \
-		$(OPENSTACK) server list; \
+	date; $(OPENSTACK) stack list; \
+	MGR_ADR=""; STAT=""; while true; do \
+		if test "$$DISP" = "0"; then \
+			SRV=$$($(OPENSTACK) server list -f value -c "Name" -c "Status" | grep $(STACKNAME)-manager | cut -d ' ' -f2); \
+			$(OPENSTACK) server list; \
+		fi; \
 		if test -z "$$MGR_ADR" -a "$$SRV" = "ACTIVE"; then \
 			$(OPENSTACK) stack output show $(STACKNAME) private_key -f value -c output_value > .id_rsa.$(STACKNAME); \
 			chmod 0600 .id_rsa.$(STACKNAME); \
 			MGR_ADR=$$($(OPENSTACK) stack output show $(STACKNAME) manager_address -f value -c output_value); \
 			echo "MANAGER_ADDRESS=$$MGR_ADR" > .MANAGER_ADDRESS.$(STACKNAME); \
 		fi; \
+		STAT=$$($(OPENSTACK) stack list -f value -c "Stack Name" -c "Stack Status" | grep $(STACKNAME) | cut -d' ' -f2); \
 		if test -n "$$MGR_ADR"; then \
 			LEN=$$(ssh -o StrictHostKeyChecking=no -i .id_rsa.$(STACKNAME) ubuntu@$$MGR_ADR sudo wc -l /var/log/cloud-init-output.log 2>/dev/null); \
 			LEN=$${LEN%% *}; \
@@ -112,11 +115,11 @@ watch: .deploy.$(STACKNAME)
 			  DISP=$$LEN; \
 			fi; \
 		fi; \
-		STAT=$$($(OPENSTACK) stack list -f value -c "Stack Name" -c "Stack Status" | grep $(STACKNAME) | cut -d' ' -f2); \
 		if test "$$STAT" == "CREATE_COMPLETE"; then break; fi; \
 		if test "$$STAT" == "CREATE_FAILED"; then $(OPENSTACK) stack show $(STACKNAME) -f value -c "stack_status_reason"; break; fi; \
-		sleep 10; \
-	done
+		sleep 5; \
+	done; \
+	date
 
 # Look for stack
 .deploy.$(STACKNAME):
