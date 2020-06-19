@@ -1,0 +1,6 @@
+image       = "Ubuntu 18.04"
+flavor_node = "s2.xlarge.8"
+flavor_manager = "s2.large.2"
+availability_zone = "eu-de-03"
+volume_availability_zone = "eu-de-03"
+public = "admin_external_net"
