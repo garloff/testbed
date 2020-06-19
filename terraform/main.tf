@@ -1,5 +1,5 @@
-provider "openstack" {
-  cloud = "testbed"
+provider "opentelekomcloud" {
+  cloud = "otc-osism-testbed"
 }
 
 terraform {
