@@ -269,6 +269,7 @@ data "openstack_networking_network_v2" "public" {
 
 resource "openstack_networking_router_v2" "router" {
   external_network_id     = data.openstack_networking_network_v2.public.id
+  enable_snat = true
 }
 
 resource "openstack_networking_router_interface_v2" "router_interface" {
