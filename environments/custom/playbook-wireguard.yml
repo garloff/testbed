@@ -8,6 +8,7 @@
     - name: Add wireguard repository
       apt_repository:
         repo: ppa:wireguard/wireguard
+        mode: 0600
       become: true
       when: "ansible_distribution_release == 'bionic'"
 
@@ -19,14 +20,17 @@
       become: true
       when: "ansible_distribution_release == 'bionic'"
 
-    - name: Install wireguard package
+    - name: Install wireguard packages
       package:
-        name: wireguard
+        name: "{{ item }}"
         state: present
       become: true
+      loop:
+        - wireguard
+        - wireguard-dkms
 
     - name: Build wireguard kernel module
-      command: dpkg-reconfigure wireguard-dkms
+      command: dpkg-reconfigure wireguard-dkms  # noqa 301
       become: true
 
     - name: Create public and private key
@@ -73,24 +77,30 @@
       become: true
       notify: Restart wg0 service
 
+    # NOTE: Errors are ignored because the kernel module may not be available
+    #       after initial installation until after a reboot.
     - name: Start/enable wg-quick@wg0.service service
       systemd:
         name: wg-quick@wg0.service
         state: started
         enabled: yes
       become: true
+      ignore_errors: true
 
   handlers:
+    # NOTE: Errors are ignored because the kernel module may not be available
+    #       after initial installation until after a reboot.
     - name: Restart wg0 service
       systemd:
         name: wg-quick@wg0.service
         state: restarted
       become: true
+      ignore_errors: true
 
 - hosts: all:!manager
   gather_facts: false
 
   tasks:
-    - name: Add route to 192.168.60.0/24
-      command: ip route replace 192.168.60.0/24 via 192.168.50.5
+    - name: Add route to 192.168.48.0/20
+      command: ip route replace 192.168.48.0/20 via 192.168.32.5  # noqa 301
       become: true

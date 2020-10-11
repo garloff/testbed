@@ -1,6 +1,5 @@
 resource "openstack_networking_floatingip_v2" "manager_floating_ip" {
   pool       = var.public
-  port_id    = openstack_networking_port_v2.manager_port_management.id
   depends_on = [openstack_networking_router_interface_v2.router_interface]
 }
 
@@ -12,9 +11,14 @@ resource "openstack_networking_port_v2" "manager_port_management" {
   ]
 
   fixed_ip {
-    ip_address = "192.168.40.5"
+    ip_address = "192.168.16.5"
     subnet_id  = openstack_networking_subnet_v2.subnet_management.id
   }
+}
+
+resource "openstack_networking_floatingip_associate_v2" "manager_floating_ip_association" {
+  floating_ip = openstack_networking_floatingip_v2.manager_floating_ip.address
+  port_id     = openstack_networking_port_v2.manager_port_management.id
 }
 
 resource "openstack_networking_port_v2" "manager_port_internal" {
@@ -22,12 +26,12 @@ resource "openstack_networking_port_v2" "manager_port_internal" {
   security_group_ids = [openstack_compute_secgroup_v2.security_group_internal.id]
 
   fixed_ip {
-    ip_address = "192.168.50.5"
+    ip_address = "192.168.32.5"
     subnet_id  = openstack_networking_subnet_v2.subnet_internal.id
   }
 
   allowed_address_pairs {
-    ip_address = "192.168.60.0/24"
+    ip_address = "192.168.48.0/20"
   }
 }
 
@@ -36,21 +40,25 @@ resource "openstack_networking_port_v2" "manager_port_external" {
   security_group_ids = [openstack_compute_secgroup_v2.security_group_external.id]
 
   fixed_ip {
-    ip_address = "192.168.90.5"
+    ip_address = "192.168.96.5"
     subnet_id  = openstack_networking_subnet_v2.subnet_external.id
   }
 
   allowed_address_pairs {
-    ip_address = "192.168.60.0/24"
+    ip_address = "192.168.48.0/20"
   }
 }
 
 resource "openstack_networking_port_v2" "manager_port_provider" {
-  network_id            = openstack_networking_network_v2.net_provider.id
-  port_security_enabled = false
+  network_id = openstack_networking_network_v2.net_provider.id
+
+  # NOTE: port_security_enabled not usable with OVH
+  #
+  # {"NeutronError": {"message": "Unrecognized attribute(s) 'port_security_enabled'", "type": "HTTPBadRequest", "detail": ""}}
+  port_security_enabled = var.port_security_enabled
 
   fixed_ip {
-    ip_address = "192.168.100.5"
+    ip_address = "192.168.112.5"
     subnet_id  = openstack_networking_subnet_v2.subnet_provider.id
   }
 }
@@ -60,13 +68,13 @@ resource "openstack_networking_port_v2" "manager_port_storage_frontend" {
   security_group_ids = [openstack_compute_secgroup_v2.security_group_storage_frontend.id]
 
   fixed_ip {
-    ip_address = "192.168.70.5"
+    ip_address = "192.168.64.5"
     subnet_id  = openstack_networking_subnet_v2.subnet_storage_frontend.id
   }
 }
 
 resource "openstack_compute_instance_v2" "manager_server" {
-  name              = "testbed-manager"
+  name              = "${var.prefix}-manager"
   availability_zone = var.availability_zone
   image_name        = var.image
   flavor_name       = var.flavor_manager
@@ -103,79 +111,95 @@ write_files:
       for interface in netifaces.interfaces():
           mac_address = netifaces.ifaddresses(interface)[netifaces.AF_LINK][0]['addr']
           if mac_address in PORTS:
-              subprocess.run("ip addr add %s/24 dev %s" % (PORTS[mac_address], interface), shell=True)
+              subprocess.run("ip addr add %s/20 dev %s" % (PORTS[mac_address], interface), shell=True)
               subprocess.run("ip link set up dev %s" % interface, shell=True)
     path: /root/configure-network-devices.py
-    permissions: 0600
+    permissions: '0600'
   - content: ${openstack_compute_keypair_v2.key.public_key}
     path: /home/ubuntu/.ssh/id_rsa.pub
-    permissions: 0600
+    permissions: '0600'
   - content: |
       ${indent(6, openstack_compute_keypair_v2.key.private_key)}
     path: /home/ubuntu/.ssh/id_rsa
-    permissions: 0600
+    permissions: '0600'
+  - content: |
+      ${indent(6, file("files/node.yml"))}
+    path: /opt/node.yml
+    permissions: '0644'
+  - content: |
+      ${indent(6, file("files/cleanup.yml"))}
+    path: /opt/cleanup.yml
+    permissions: '0644'
+  - content: |
+      ${indent(6, file("files/cleanup.sh"))}
+    path: /root/cleanup.sh
+    permissions: '0700'
+  - content: |
+      ${indent(6, file("files/manager-part-1.yml"))}
+    path: /opt/manager-part-1.yml
+    permissions: '0644'
+  - content: |
+      ${indent(6, file("files/manager-part-2.yml"))}
+    path: /opt/manager-part-2.yml
+    permissions: '0644'
+  - content: |
+      ${indent(6, file("files/manager-part-3.yml"))}
+    path: /opt/manager-part-3.yml
+    permissions: '0644'
+  - content: |
+      ${indent(6, file("files/node.sh"))}
+    path: /root/node.sh
+    permissions: 0700
   - content: |
       #!/usr/bin/env bash
-
-      python3 /root/configure-network-devices.py
-
-      chown -R ubuntu:ubuntu /home/ubuntu/.ssh
-
-      add-apt-repository --yes ppa:ansible/ansible
-      apt-get install --yes ansible
-
-      ansible-galaxy install git+https://github.com/osism/ansible-chrony
-      ansible-galaxy install git+https://github.com/osism/ansible-common
-      ansible-galaxy install git+https://github.com/osism/ansible-operator
-      ansible-galaxy install git+https://github.com/osism/ansible-repository
-      ansible-galaxy install git+https://github.com/osism/ansible-resolvconf
-
-      curl https://raw.githubusercontent.com/osism/testbed/${var.configuration_version}/playbooks/node.yml > /root/node.yml
-      ansible-playbook -i localhost, /root/node.yml
 
       cp /home/ubuntu/.ssh/id_rsa /home/dragon/.ssh/id_rsa
       cp /home/ubuntu/.ssh/id_rsa.pub /home/dragon/.ssh/id_rsa.pub
       chown -R dragon:dragon /home/dragon/.ssh
 
-      sudo -iu dragon ansible-galaxy install git+https://github.com/osism/ansible-configuration
-      sudo -iu dragon ansible-galaxy install git+https://github.com/osism/ansible-docker
-      sudo -iu dragon ansible-galaxy install git+https://github.com/osism/ansible-docker-compose
       sudo -iu dragon ansible-galaxy install git+https://github.com/osism/ansible-manager
+      sudo -iu dragon ansible-galaxy install git+https://github.com/osism/ansible-docker
 
-      curl https://raw.githubusercontent.com/osism/testbed/${var.configuration_version}/playbooks/manager-part-1.yml | sudo -iu dragon tee /home/dragon/manager-part-1.yml
-      curl https://raw.githubusercontent.com/osism/testbed/${var.configuration_version}/playbooks/manager-part-2.yml | sudo -iu dragon tee /home/dragon/manager-part-2.yml
-      curl https://raw.githubusercontent.com/osism/testbed/${var.configuration_version}/playbooks/manager-part-3.yml | sudo -iu dragon tee /home/dragon/manager-part-3.yml
+      git clone https://github.com/osism/ansible-collection-commons.git /tmp/ansible-collection-commons
+      ( cd /tmp/ansible-collection-commons; ansible-galaxy collection build; sudo -iu dragon ansible-galaxy collection install -v -f -p /usr/share/ansible/collections osism-commons-*.tar.gz; )
+      rm -rf /tmp/ansible-collection-commons
 
-      sudo -iu dragon ansible-playbook -i testbed-manager.osism.local, /home/dragon/manager-part-1.yml -e configuration_git_version=${var.configuration_version}
+      git clone https://github.com/osism/ansible-collection-services.git /tmp/ansible-collection-services
+      ( cd /tmp/ansible-collection-services; ansible-galaxy collection build; sudo -iu dragon ansible-galaxy collection install -v -f -p /usr/share/ansible/collections osism-services-*.tar.gz; )
+      rm -rf /tmp/ansible-collection-services
+
+      sudo -iu dragon ansible-galaxy collection install ansible.netcommon
+
+      sudo -iu dragon ansible-playbook -i testbed-manager.osism.test, /opt/manager-part-1.yml -e configuration_git_version=${var.configuration_version}
       sudo -iu dragon sh -c 'cd /opt/configuration; ./scripts/set-ceph-version.sh ${var.ceph_version}'
       sudo -iu dragon sh -c 'cd /opt/configuration; ./scripts/set-openstack-version.sh ${var.openstack_version}'
 
-      sudo -iu dragon ansible-playbook -i testbed-manager.osism.local, /home/dragon/manager-part-2.yml
-      sudo -iu dragon ansible-playbook -i testbed-manager.osism.local, /home/dragon/manager-part-3.yml
+      sudo -iu dragon ansible-playbook -i testbed-manager.osism.test, /opt/manager-part-2.yml
+      sudo -iu dragon ansible-playbook -i testbed-manager.osism.test, /opt/manager-part-3.yml
 
-      sudo -iu dragon docker cp /home/dragon/.ssh/id_rsa.pub manager_osism-ansible_1:/share/id_rsa.pub
-
-      rm /home/ubuntu/.ssh/id_rsa*
+      sudo -iu dragon cp /home/dragon/.ssh/id_rsa.pub /opt/ansible/secrets/id_rsa.operator.pub
 
       # NOTE(berendt): wait for ARA
       until [[ "$(/usr/bin/docker inspect -f '{{.State.Health.Status}}' manager_ara-server_1)" == "healthy" ]]; do
           sleep 1;
       done;
 
-      curl https://raw.githubusercontent.com/osism/testbed/${var.configuration_version}/playbooks/cleanup.yml > /root/cleanup.yml
-      ansible-playbook -i localhost, /root/cleanup.yml
-      update-alternatives --install /usr/bin/python python /usr/bin/python3 1
+      /root/cleanup.sh
 
       # NOTE(berendt): sudo -E does not work here because sudo -i is needed
 
       sudo -iu dragon sh -c 'INTERACTIVE=false osism-run custom cronjobs'
       sudo -iu dragon sh -c 'INTERACTIVE=false osism-run custom facts'
 
-      # deploy proxy services
-      sudo -iu dragon sh -c '/opt/configuration/scripts/deploy_proxy_services.sh'
-
       sudo -iu dragon sh -c 'INTERACTIVE=false osism-generic bootstrap'
       sudo -iu dragon sh -c 'INTERACTIVE=false osism-generic operator'
+
+      # copy network configuration
+      sudo -iu dragon sh -c 'INTERACTIVE=false osism-generic network'
+
+      # reboot nodes
+      sudo -iu dragon sh -c 'INTERACTIVE=false osism-generic reboot -l "all:!manager" -e ireallymeanit=yes'
+      sudo -iu dragon sh -c 'INTERACTIVE=false osism-generic wait-for-connection -l "all:!manager" -e ireallymeanit=yes'
 
       # NOTE: Restart the manager services to update the /etc/hosts file
       sudo -iu dragon sh -c 'docker-compose -f /opt/manager/docker-compose.yml restart'
@@ -189,12 +213,9 @@ write_files:
       # deploy helper services
       sudo -iu dragon sh -c '/opt/configuration/scripts/deploy_helper_services.sh'
 
-      # copy network configuration
-      sudo -iu dragon sh -c 'INTERACTIVE=false osism-generic network'
-
       # deploy infrastructure services
       if [[ "${var.deploy_infrastructure}" == "true" ]]; then
-          sudo -iu dragon sh -c '/opt/configuration/scripts/deploy_infrastructure_services.sh'
+          sudo -iu dragon sh -c '/opt/configuration/scripts/deploy_infrastructure_services_basic.sh'
       fi
 
       # deploy ceph services
@@ -209,6 +230,10 @@ write_files:
           else
               sudo -iu dragon sh -c '/opt/configuration/scripts/deploy_openstack_services_basic.sh'
 
+              if [[ "${var.run_rally}" == "true" ]]; then
+                  sudo -iu dragon sh -c '/opt/configuration/contrib/rally/rally.sh'
+              fi
+
               if [[ "${var.run_refstack}" == "true" ]]; then
                   sudo -iu dragon sh -c 'INTERACTIVE=false osism-run openstack bootstrap-refstack'
                   sudo -iu dragon sh -c '/opt/configuration/contrib/refstack/refstack.sh'
@@ -220,13 +245,14 @@ write_files:
       if [[ "${var.deploy_monitoring}" == "true" ]]; then
           sudo -iu dragon sh -c '/opt/configuration/scripts/deploy_monitoring_services.sh'
       fi
-    path: /root/run.sh
+    path: /root/manager.sh
     permissions: 0700
 runcmd:
   - "echo 'network: {config: disabled}' > /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg"
   - "rm -f /etc/network/interfaces.d/50-cloud-init.cfg"
   - "mv /etc/netplan/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml.unused"
-  - "/root/run.sh"
+  - "/root/node.sh"
+  - "/root/manager.sh"
 final_message: "The system is finally up, after $UPTIME seconds"
 power_state:
   mode: reboot

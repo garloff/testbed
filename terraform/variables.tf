@@ -1,3 +1,13 @@
+variable "cloud_provider" {
+  default = "betacloud"
+  type    = string
+}
+
+variable "prefix" {
+  default = "testbed"
+  type    = string
+}
+
 variable "image" {
   default = "Ubuntu 18.04"
   type    = string
@@ -14,7 +24,7 @@ variable "flavor_node" {
 }
 
 variable "flavor_manager" {
-  default = "2C-4GB-20GB"
+  default = "4C-8GB-20GB"
   type    = string
 }
 
@@ -38,6 +48,11 @@ variable "public" {
   type    = string
 }
 
+variable "port_security_enabled" {
+  default = false
+  type    = bool
+}
+
 variable "deploy_infrastructure" {
   default = false
   type    = bool
@@ -58,6 +73,11 @@ variable "deploy_monitoring" {
   type    = bool
 }
 
+variable "run_rally" {
+  default = false
+  type    = bool
+}
+
 variable "run_refstack" {
   default = false
   type    = bool
@@ -74,7 +94,7 @@ variable "ceph_version" {
 }
 
 variable "openstack_version" {
-  default = "train"
+  default = "ussuri"
   type    = string
 }
 
