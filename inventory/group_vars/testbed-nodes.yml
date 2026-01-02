@@ -16,6 +16,7 @@ docker_proxy_no_proxy_extra:
   - api-int
   - api-int.testbed.osism.xyz
   - api.testbed.osism.xyz
+  - keycloak.testbed.osism.xyz
   - testbed-manager
 
 ##########################################################
@@ -33,6 +34,7 @@ proxy_no_proxy_extra:
   - api-int
   - api-int.testbed.osism.xyz
   - api.testbed.osism.xyz
+  - keycloak.testbed.osism.xyz
   - testbed-manager
 
 ##########################################################
